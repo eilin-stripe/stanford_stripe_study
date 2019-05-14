@@ -15,26 +15,34 @@ clear
 ** Setup Paths
 findbase "Stripe"
 local base = r(base)
-include `base'/Code/Stata/file_header.do
+qui include `base'/Code/Stata/file_header.do
 
+local Temp1_1 = "`raw_distribution'/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award-Distribution_History.csv"
+local Temp1_2 = "`raw_distribution'/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award-Distribution_History (1).csv"
+local Temp1_3 = "`raw_distribution'/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award-Distribution_History (2).csv"
+local Temp2_1 = "`raw_distribution'/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award_100-Distribution_History.csv"
+local Temp2_2 = "`raw_distribution'/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award_100-Distribution_History (1).csv"
+local Wave1 = "`raw_distribution'/Stripe_Enterprise_Survey_FINAL_wave_1-Distribution_History.csv"
+local Wave2_1 = "`raw_distribution'/Wave2Mar5th2019_2019_05_04.csv"
+local Wave2_2 = "`raw_distribution'/Wave2Mar6th2019_2019_05_04.csv"
+local Wave2_add1 = "`raw_distribution'/Wave2Mar5th2019_2019_05_03.csv"
+local Wave2_add2 = "`raw_distribution'/Wave2Mar6th2019_2019_05_03.csv"
+local Wave3_1 = "`raw_distribution'/Wave3Apr2nd2019_2019_05_03.csv"
+local Wave3_2 = "`raw_distribution'/Wave3Apr3rd2019_2019_05_03.csv"
+local Wave3_3 = "`raw_distribution'/Wave3Apr4th2019_2019_05_03.csv"
+local Wave3_4 = "`raw_distribution'/Wave3Apr5th2019_2019_05_03.csv"
+local Wave3_5 = "`raw_distribution'/Wave3Apr6th2019_2019_05_03.csv"
+local Wave3_6 = "`raw_distribution'/Wave3Apr7th2019_2019_05_03.csv"
+local Wave3_7 = "`raw_distribution'/Wave3Apr9th2019_2019_05_03.csv"
 
-local Wave2_1 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_wave2_1-Distribution_History.csv"
-local Wave2_2 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_wave2_2-Distribution_History.csv"
-local Wave1 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_FINAL_wave_1-Distribution_History.csv"
-local Temp1_1 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award-Distribution_History.csv"
-local Temp1_2 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award-Distribution_History (1).csv"
-local Temp1_3 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award-Distribution_History (2).csv"
-local Temp2_1 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award_100-Distribution_History.csv"
-local Temp2_2 = "`raw_survey'/Distribution/Stripe_Enterprise_Survey_NH_181105_1__temp_pilot_modified_baseline_only_no_award_100-Distribution_History (1).csv"
-
-local save = "`clean_survey'/Conversions.dta"
-local sample = "`clean_survey'/Sample.dta"
+local save = "`clean_survey'/History/Conversions.dta"
+local sample = "`clean_sampling'/Sample2.dta"
 
 *******************************************************************************
 **
 *******************************************************************************
-local wave = 2
-local history = "`clean_survey'/HistoryWave`wave'.dta"
+local wave = 0
+local history = "`clean_survey'/History/HistoryWave`wave'.dta"
 
 if `wave' == 1 {
     import delimited "`Wave1'" , varnames(1) clear
@@ -46,6 +54,15 @@ else if `wave' == 2 {
 
     import delimited "`Wave2_2'" , varnames(1) clear
     append using "`dist1'"
+}
+else if `wave' == 3 {
+    tempfile iter3
+    save `iter3', emptyok
+    forvalues x = 1/7 {
+        import delimited "`Wave3_`x''" , varnames(1) clear
+        append using `iter3'
+        save "`iter3'", replace
+    }
 }
 else if `wave' == 0 {
     import delimited "`Temp1_1'" , varnames(1)

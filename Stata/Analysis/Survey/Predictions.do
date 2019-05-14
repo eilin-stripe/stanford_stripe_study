@@ -15,34 +15,34 @@ clear
 ** Setup Paths
 findbase "Stripe"
 local base = r(base)
-include `base'/Code/Stata/file_header.do
+qui include `base'/Code/Stata/file_header.do
 
 ** Load in the Stripe Panel data
 local main = "`clean_main_survey'/Main.dta"
-
+local prediction_check = "`clean_main_survey'/PredictionCheck.dta"
 local outdir = "`output'/Predictions"
 
 local logbase = 1.4
 *******************************************************************************
 ** Stats
 *******************************************************************************
-use "`main'", replace
+* use "`main'", replace
+use "`prediction_check'", replace
 keep if Finished == 1
 
-// set the last month revenue based on what month they completed the survey
-gen EndMonth = month(EndDate)
-gen StartMonth = month(StartDate)
-gen Month = .
-replace Month = EndMonth if StartMonth == EndMonth
-drop if Month == .
+gen Actual3MonthsHigh = (Actual3Months * 1.1)
+gen Actual3MonthsLow = (Actual3Months / 1.1)
+gen Actual3MonthsHighRound = round(Actual3MonthsHigh, 1000)
+gen Actual3MonthsLowRound = round(Actual3MonthsLow, 1000)
+gen Within10_1 = (Predict3Months >= Actual3MonthsLow & Predict3Months <= Actual3MonthsHigh)
+gen Within10_round = (Predict3Months >= Actual3MonthsLowRound & Predict3Months <= Actual3MonthsHighRound)
+gen Within10_2 = Within10_1 | Within10_round
+gen Within10_1000 = (Actual3Months <= 1000) & (Predict3Months == 1000 | Predict3Months == 0)
+gen Within10_3 = Within10_1 | Within10_round | Within10_1000
 
-replace DecRev = DecRev / 100
-replace JanRev = JanRev / 100
-replace FebRev = FebRev / 100
-replace LastYearRev = LastYearRev / 100
+gen Winner = 0
+replace Winner = 1 if Within10_2 == 1
 
-gen Actual3Month = (JanRev + FebRev) * (90/56) if Month == 1
-replace Actual3Month = FebRev * (89/25) if Month == 2
 
 replace Predict3Months = Predict3Months * 1000
 replace Bad3Months = Bad3Months * 1000
@@ -124,6 +124,11 @@ pretty (scatter StdRange_w FirstSaleYear, xlogbase(2) ), ///
     xtitle("First Sale Year") ///
     ytitle("Normalized Prediction Range") ///
     name("RangeVsFirstSaleYear") save("`outdir'/RangeVsFirstSaleYear.eps")
+
+pretty (scatter StdRange_w PreviousBusinesses  if !inlist(StdRange_w, -777) ///
+    & PreviousBusinesses != -777) , xtitle("# Previous Businesses") ///
+    ytitle("Normalized Prediction Range") ///
+    name("RangeVsNumPrevBus") save("`outdir'/NumPrevBus.eps")
 
 pretty (scatter StdRange_w PreviousBusinesses  if !inlist(StdRange_w, -777) ///
     & PreviousBusinesses != -777) , xtitle("# Previous Businesses") ///

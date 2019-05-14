@@ -11,6 +11,7 @@ local raw_survey = "`raw_data'/Survey"
 local raw_completed = "`raw_survey'/CompletedWaves"
 local raw_internal = "`raw_survey'/Internal"
 local raw_sampling = "`raw_survey'/Sampling"
+local raw_distribution = "`raw_survey'/Distribution"
 local ReferenceUSA = "`raw_data'/ReferenceUSA"
 local compustat = "`raw_data'/Compustat"
 local tiger = "`raw_geo'/TIGER"
@@ -27,6 +28,10 @@ local clean_internal = "`clean_survey'/Internal"
 local clean_sampling= "`clean_survey'/Sampling"
 local clean_main_survey = "`clean_survey'/MainSurvey"
 local clean_conversion = "`clean_survey'/Conversion"
+
+** Simulated Data
+local sim_data = "`data'/Simulated"
+
 
 local main_panel = "`clean_stripe'/PanelActivated.dta"
 
@@ -72,7 +77,7 @@ label define PrevJobQuitReason 1 "Focus on This" 2 "Explore Business Ideas" ///
 label define Months 1 "January" 2 "February" 3 "March" 4 "April" 5 "May" ///
     6 "June" 7 "July" 8 "August" 9 "September" 10 "October" 11 "November" ///
     12 "December" -777 "NA"
-label define Country 1 "United States" 2 "Algeria"
+label define Country 1 "United States" -888 "Other"
 label define Female 0 "Male" 1 "Female"
 label define Education 1 "< High School" 2 "High School" ///
     3 "Some College" 4 "2-Year Degree" ///

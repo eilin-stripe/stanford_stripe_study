@@ -21,7 +21,7 @@ include `base'/Code/Stata/file_header.do
 local survey_label = "`raw_completed'/Stripe Enterprise Survey NH 181105_1 - temp pilot modified baseline only no award ($100)_December 19, 2018_01.36.csv"
 local survey_label2 = "`raw_completed'/Stripe Enterprise Survey NH 181105_1 - temp pilot modified baseline only no award_December 19, 2018_01.35.csv"
 local survey_label3 = "`raw_completed'/Stripe+Enterprise+Survey_FINAL_wave+1_March+7,+2019_19.11.csv"
-local survey_label4 = "`raw_survey'/Stripe+Enterprise+Survey_wave2_April+7,+2019_20.16.csv"
+local survey_label4 = "`raw_survey'/Stripe+Enterprise+Survey_wave2_May+13,+2019_13.57.csv"
 local save = "`clean_main_survey'/Survey.dta"
 *******************************************************************************
 ** SETUP CORE VARIABLES
@@ -821,4 +821,4 @@ drop if LastName == "" & FirstName == ""
 
 save "`save'", replace
 
-keep if Finished == 1
+* keep if Finished == 1

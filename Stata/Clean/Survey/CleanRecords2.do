@@ -24,43 +24,35 @@ local save = "`clean_internal'/Records.dta"
 *******************************************************************************
 import delimited "`use'" , encoding(ISO-8859-1)
 
-rename responseid ResponseID
 rename externalreference ExternalReference
 
 *******************************************************************************
 ** Dates
 *******************************************************************************
-
-rename startdate StartDateTemp
-replace StartDateTemp = substr(StartDateTemp, 1, 10)
-gen StartDate =  date(StartDateTemp,"YMD",1999)
-format StartDate %td
-drop StartDateTemp
-
-rename enddate EndDateTemp
-replace EndDateTemp = substr(EndDateTemp, 1, 10)
-gen EndDate =  date(EndDateTemp,"YMD",1999)
-format EndDate %td
-drop EndDateTemp
-
 rename first_application_submitted_date ApplicationDateTemp
-replace ApplicationDateTemp  = substr(ApplicationDateTemp , 1, 10)
-gen ApplicationDate =  date(ApplicationDateTemp ,"YMD",1999)
-format ApplicationDate %td
-drop ApplicationDateTemp
+rename first_charge_date FirstChargeDateTemp
+rename activation_date ActivationDateTemp
+
+local datelist = "ApplicationDate FirstChargeDate ActivationDate"
+
+foreach datevar of local datelist {
+    replace `datevar'Temp  = substr(`datevar'Temp , 1, 10)
+    gen `datevar' =  date(`datevar'Temp ,"YMD",1999)
+    format `datevar' %td
+    drop `datevar'Temp
+}
 
 
 *******************************************************************************
 ** Sales Volumes
 *******************************************************************************
-rename dec_rev DecRev
-rename dec_transactions DecTrans
-rename jan_rev JanRev
-rename jan_transactions JanTrans
-rename feb_rev FebRev
-rename feb_transactions FebTrans
-rename mar_rev MarRev
-rename mar_transactions MarTrans
+local monthlist = "dec jan feb mar apr"
+foreach month of local monthlist {
+    local capmonth = proper("`month'")
+    rename `month'_rev `capmonth'Rev
+    rename `month'_transactions `capmonth'Trans
+}
+
 rename last_year_rev LastYearRev
 rename last_year_transactions LastYearTrans
 rename all_time_transactions AllTrans
