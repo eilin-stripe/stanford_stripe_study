@@ -43,11 +43,6 @@ gen Within10_3 = Within10_1 | Within10_round | Within10_1000
 gen Winner = 0
 replace Winner = 1 if Within10_2 == 1
 
-
-replace Predict3Months = Predict3Months * 1000
-replace Bad3Months = Bad3Months * 1000
-replace Good3Months = Good3Months * 1000
-
 sort EndDate
 bys EndDate : egen AvgPredict3Months = mean(Predict3Months)
 egen EndDateTag = tag(Predict3Months)

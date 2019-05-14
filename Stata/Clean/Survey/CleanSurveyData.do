@@ -524,6 +524,9 @@ rename qid83 PercRevStripe
 ** PREDICTION
 *******************************************************************************
 rename qid91 RevPastMonth
+gen RevPast3Months = .
+replace RevPast3Months = RevPastMonth if SurveyRound == 2
+replace RevPastMonth = . if SurveyRound == 2
 rename qid92 Predict3Months
 rename qid95 Predict12Months
 rename qid27 Bad3Months
@@ -820,5 +823,15 @@ drop if FirstName == "Kerenssa" & LastName == "Kay"
 drop if LastName == "" & FirstName == ""
 
 save "`save'", replace
+
+keep if SurveyRound == 2
+gen test = Predict3Months / RevPast3Month
+replace test = -777 if RevPast3Month == 0
+
+count if (test >0 & test <= .25) | (test >=4)
+count if (test >0 & test <= .2) | (test >=5)
+pretty (hist test, xlogbase(1.2)) , name("PredVsActual3") save("/tmp/PredVsActual3.eps")
+
+
 
 * keep if Finished == 1
