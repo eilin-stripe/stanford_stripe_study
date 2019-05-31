@@ -60,6 +60,11 @@ replace Wave = 1 if SurveyRound == 0
 replace Wave = 2 if SurveyRound == 1
 */
 
+*******************************************************************************
+** SETUP: ef
+*******************************************************************************
+// starts with round 1 data (excludes previous pilots)
+
 rename responseid ResponseID
 
 qui {
