@@ -307,9 +307,8 @@ graph rename RevenueAccuracy, replace
 graph export "`outdir'/RevenueAccuracy.eps", replace
 
 
-
 graph hbar, over(Bigger) asyvars stack over(DaysToComplete2, descending) percent ///
-    scheme(pretty1) legend( region(lwidth(none)) col(5) stack) ///
+    scheme(pretty1) legend( region(lwidth(none)) col(5) stack) /// 
     bar(1, color(edkblue)) bar(2, color(ebblue)) ///
     bar(3, color(eltblue)) bar(4, color(lavender)) ///
     bar(5, color(purple)) ytitle("") title("Days to Complete")
