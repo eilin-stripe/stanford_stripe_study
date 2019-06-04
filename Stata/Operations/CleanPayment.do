@@ -18,17 +18,17 @@ local base = r(base)
 include `base'/Code/Stata/file_header.do
 
 ** Load in the Stripe Panel data
-local survey_label = "`raw_survey'/Stripe+Enterprise+Survey_wave2_May+13,+2019_13.37.csv"
+local survey_label = "`raw_survey'/Stripe+Enterprise+Survey_wave2_May+23,+2019_15.40.csv"
 
 // The last version of respondents and their data
-local lastsave = "`clean_payment'/PaymentListMay1st2019.dta"
+local lastsave = "`clean_payment'/PaymentListMay13th2019.dta"
 
 // The place to save the latest version of respondents and their data
-local save = "`clean_payment'/PaymentListMay13th2019.dta"
+local save = "`clean_payment'/PaymentListMay23rd2019.dta"
 
 // The place to save an extra of only the recent set of finished surveys
 // to be sent as a payment list
-local export = "`clean_payment'/PaymentListMay13th2019.csv"
+local export = "`clean_payment'/PaymentListMay23rd2019.csv"
 *******************************************************************************
 ** SETUP CORE VARIABLES
 *******************************************************************************

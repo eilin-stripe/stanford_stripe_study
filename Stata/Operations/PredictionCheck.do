@@ -36,14 +36,14 @@ gen Actual3MonthsLow = (Actual3Months / 1.1)
 
 gen Actual3MonthsHighRound = round(Actual3MonthsHigh, 1000)
 gen Actual3MonthsLowRound = round(Actual3MonthsLow, 1000)
-gen Within10_1 = (Predict3Months >= Actual3MonthsLow & Predict3Months <= Actual3MonthsHigh)
-gen Within10_round = (Predict3Months >= Actual3MonthsLowRound & Predict3Months <= Actual3MonthsHighRound)
-gen Within10_2 = Within10_1 | Within10_round
-gen Within10_1000 = (Actual3Months <= 1000) & (Predict3Months == 1000 | Predict3Months == 0)
-gen Within10_3 = Within10_1 | Within10_round | Within10_1000
+gen Within10_1 = (Predict3Months >= Actual3MonthsLow & Predict3Months <= Actual3MonthsHigh) if Finished == 1
+gen Within10_round = (Predict3Months >= Actual3MonthsLowRound & Predict3Months <= Actual3MonthsHighRound) if Finished == 1
+gen Within10_2 = Within10_1 | Within10_round if Finished == 1
+gen Within10_1000 = (Actual3Months <= 1000) & (Predict3Months == 1000 | Predict3Months == 0) if Finished == 1
+gen Within10_3 = Within10_1 | Within10_round | Within10_1000 if Finished == 1
 
 gen Winner = 0
-replace Winner = 1 if Within10_3 == 1
+replace Winner = 1 if Within10_2 == 1
 
 order SurveyFirstName SurveyLastName Email Winner
 
@@ -54,11 +54,54 @@ replace Denom = 365 if DateDif > 365
 replace Denom = DateDif if DateDif <= 365
 
 
-gen RevPerMonth = (LastYearRevenue / Denom) * (30/100)
+gen PrevMonthlyRev = (LastYearRevenue / Denom) * (30/100)
 replace Finished = 0 if Finished == .
 save "`PredictionList'", replace
 
+save "`clean_sampling'/GiftCardsRound2.dta", replace
 export delimited using "`clean_sampling'/GiftCardsRound2.csv", replace
+
+keep if Finished == 1
+keep *Name Email Winner PrevMonthlyRev ExternalReference
+
+save "`clean_sampling'/ResurveyList.dta", replace
+export delimited using "`clean_sampling'/ResurveyList.csv", replace
+
+import excel "`raw_operations'/Round 2 GC Assignment.xlsx", sheet("MQT7") cellrange(A3:J53) firstrow clear
+tempfile MQT7
+save "`MQT7'", replace
+
+import excel "`raw_operations'/Round 2 GC Assignment.xlsx", sheet("OM64") cellrange(A3:K203) firstrow clear
+keep if Status == "Assigned"
+append using "`MQT7'"
+
+keep Name Email CLAIMCODE AccountID
+rename CLAIMCODE ClaimCode
+sort AccountID
+bys AccountID : gen GiftCardNum = _n
+reshape wide ClaimCode, i(Name Email AccountID) j(GiftCardNum)
+rename ClaimCode1 ThankYouCode
+rename ClaimCode2 RewardCode
+rename AccountID ExternalReference
+
+tempfile giftcards
+save "`giftcards'" , replace
+
+use "`clean_sampling'/ResurveyList.dta"
+merge 1:1 ExternalReference using "`giftcards'"
+drop _merge
+
+export delimited using "`clean_sampling'/ResurveyList.csv", replace
+
+use "`clean_sampling'/GiftCardsRound2.dta", replace
+
+keep if Finished == 0
+drop if OptedOut == 1
+keep FirstName LastName Email ExternalReference
+
+export delimited using "`clean_sampling'/ResurveyListNoAnswer.csv", replace
+
+
 
 /*
 gen Dif = abs(Predict3Months - Actual3Months)

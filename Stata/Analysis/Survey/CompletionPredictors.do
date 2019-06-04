@@ -41,7 +41,8 @@ drop _merge
 merge 1:1 ExternalReference  using "`demographics'"
 drop _merge
 
-keep if inlist(Wave , 2)
+keep if inlist(Wave , 1, 2)
+
 
 replace Email = strlower(Email)
 gen InfoDummy = regexm(Email, "info")

@@ -96,6 +96,7 @@ qui {
     label variable qid105_6_text "What are your biggest current challenges for this business? "
     label variable qid23 "Over past year, has it become easier or harder to build business home country?"
     label variable q74 "What percent of your revenue comes from online transactions?"
+    label variable q74new "What percent of your revenue goes through Stripe or a platform that uses Stripe?"
     label variable qid67 "Are you proficient in one or more coding languages?"
     label variable qid30_1 "When did this business hire an employee for the first time?"
     label variable qid38 "Where do you do most of your work?"
@@ -358,6 +359,7 @@ replace FirstCostYear = -777 if FounderFlag == 0
 
 gen DifSaleCostYear = FirstSaleYear - FirstCostYear
 replace DifSaleCostYear = -777 if FounderFlag == 0
+label variable DifSaleCost "Number of years it took for the first sale after the first business expenditure"
 
 *******************************************************************************
 ** FUNDING

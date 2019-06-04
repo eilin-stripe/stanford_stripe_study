@@ -27,23 +27,10 @@ local survey = "`clean_main_survey'/Survey.dta"
 *******************************************************************************
 use "`survey'", clear
 
-local percent_vars = "Progress"
-foreach var of local percent_vars {
-    replace `var' = `var' * 100 if `var' > 0 & `var' < 1
-    replace `var' = round(`var') if `var' > 0 & `var' < 1
-    evenbin `var' , dif(10) maxcutoff(100) zero
-    replace `var'_bin = 10 if `var'_bin == 11
-
-    split_local `var' , varname length(50)
-    local t = r(relabel)
-
-    twoway (hist `var'_bin, discrete frac xlabel( 0/10 ,valuelabel angle(45)))  ///
-        , scheme(pretty1) name("`var'", replace) xtitle("")
-    graph export "`output_stats'/`var'.eps", replace
-}
-
 keep if Finished == 1
+drop if Female == 2
 
+local gender = "compare"
 *******************************************************************************
 **
 *******************************************************************************
@@ -57,10 +44,10 @@ local tab_vars = "FounderFlag CodingProficient Female OtherJobFlag " ///
     + "CountryTemp PrevJobFlag "
 foreach var of local tab_vars {
     eststo clear
-    estpost tabulate `var', sort
-    esttab using "`output_stats'/`var'.tex" , ///
-        cells("b(label(freq)) pct(fmt(2)) cumpct(fmt(2))")  ///
-        nonumber nomtitle noobs replace ///
+    estpost tabulate `var' Female
+    esttab using "`output_stats'/`var'`gender'.tex" , ///
+        cells("b(label(freq))")  ///
+        nonumber nomtitle noobs replace unstack ///
         varlabels(, blist(Total "\hline "))
 }
 
@@ -71,8 +58,8 @@ foreach var of local horiz_vars {
     split_local `var' , varname length(50)
     local t = r(relabel)
 
-    pretty_hist_horiz `var', save("`output_stats'/`var'.eps") ///
-        name("`var'")  xtitle("")
+    pretty_hist_horiz `var', save("`output_stats'/`var'`gender'.eps") ///
+        name("`var'`gender'")  xtitle("") by(Female, rows(2) title(`t'))
 }
 
 local hist_vars = "NumFounders DifSaleCostYear Age "
@@ -80,8 +67,9 @@ foreach var of local hist_vars {
     split_local `var' , varname length(50)
     local t = r(relabel)
 
-    pretty (hist `var', discrete frac ), save("`output_stats'/`var'.eps") ///
-        name("`var'") xtitle("")
+    pretty (hist `var', discrete frac by(Female, rows(2))), ///
+        save("`output_stats'/`var'`gender'.eps") ///
+        name("`var'`gender'") xtitle("") title(`t')
 }
 
 local percent_vars = "PercRevOnline PercRevStripe PercRevInternational " ///
@@ -95,9 +83,9 @@ foreach var of local percent_vars {
     split_local `var' , varname length(50)
     local t = r(relabel)
 
-    twoway (hist `var'_bin, discrete frac xlabel( 0/10 ,valuelabel angle(45)))  ///
-        , scheme(pretty1) name("`var'", replace) xtitle("")
-    graph export "`output_stats'/`var'.eps", replace
+    twoway (hist `var'_bin, discrete frac by(Female, rows(2) title(`t')) xlabel( 0/10 ,valuelabel angle(45)))  ///
+        , scheme(pretty1) name("`var'`gender'", replace) xtitle("")
+    graph export "`output_stats'/`var'`gender'.eps", replace
 }
 
 local years_vars = "FirstSaleYear FirstCostYear FirstHireYear"
@@ -110,9 +98,9 @@ foreach var of local years_vars {
     split_local `var' , varname length(50)
     local t = r(relabel)
 
-    twoway (hist `var'_bin, discrete frac xlabel( `minbin'(5)`maxbin', valuelabel angle(45))) ///
-        , scheme(pretty1) name("`var'_bin", replace) xtitle("")
-    graph export "`output_stats'/`var'.eps", replace
+    twoway (hist `var'_bin, by(Female, rows(2) title(`t')) discrete frac xlabel( `minbin'(5)`maxbin', valuelabel angle(45))) ///
+        , scheme(pretty1) name("`var'`gender'_bin", replace) xtitle("")
+    graph export "`output_stats'/`var'`gender'.eps", replace
 }
 
 
@@ -129,9 +117,9 @@ foreach var of local hours_vars {
     split_local `var' , varname length(50)
     local t = r(relabel)
 
-    twoway (hist `var'_bin, discrete frac xlabel( `minbin'/`maxbin' , valuelabel angle(45)))  ///
-        , scheme(pretty1) name("`var'", replace) xtitle("")
-    graph export "`output_stats'/`var'.eps", replace
+    twoway (hist `var'_bin, by(Female, rows(2) title(`t')) discrete frac xlabel( `minbin'/`maxbin' , valuelabel angle(45)))  ///
+        , scheme(pretty1) name("`var'`gender'", replace) xtitle("")
+    graph export "`output_stats'/`var'`gender'.eps", replace
 }
 
 
@@ -147,27 +135,27 @@ foreach var of local log_hist_vars {
     split_local `var' , varname length(50)
     local t = r(relabel)
 
-    pretty (hist `var', xlogbase(1.4) frac zeros(1)), save("`output_stats'/`var'.eps") ///
-        name("`var'") xtitle("")
+    pretty (hist `var', by(Female, rows(2)) xlogbase(1.4) frac zeros(1)), save("`output_stats'/`var'`gender'.eps") ///
+        name("`var'`gender'") xtitle("") title(`t')
 }
 
-pretty (scatter Education EarningsPast12Months, xlogbase(1.2) ///
+pretty (scatter Education EarningsPast12Months, xlogbase(1.2) by(Female, rows(2)) ///
     ylabel(1/6, valuelabel angle(horizontal))), ///
-    xtitle(Earnings) ytitle("") name("EarningsVsEducation") ///
-    save("`output_stats'/EarningsVsEducation.eps")
+    xtitle(Earnings) ytitle("") name("EarningsVsEducation`gender'") ///
+    save("`output_stats'/EarningsVsEducation`gender'.eps")
 
 bys Education : egen MeanEarningsByEduc = mean(EarningsPast12Months) if EarningsPast12Months >= 0
 egen EducationTag = tag(Education)
 
-pretty (scatter Education MeanEarningsByEduc if EducationTag == 1, xlogbase(1.2) ///
+pretty (scatter Education MeanEarningsByEduc if EducationTag == 1, xlogbase(1.2) by(Female, rows(2)) ///
     ylabel(1/6, valuelabel angle(horizontal))), ///
-    xtitle(Earnings) ytitle("") name("MeanEarningsVsEducation") ///
-    save("`output_stats'/MeanEarningsVsEducation.eps")
+    xtitle(Earnings) ytitle("") name("MeanEarningsVsEducation`gender'") ///
+    save("`output_stats'/MeanEarningsVsEducation`gender'.eps")
 
 gen Test = EarningsPast12Months + 1
-graph hbox Test , over(Education, descending) nooutside scheme(pretty1) ///
-    ytitle("Earnings") name("BoxEarningsVsEducation", replace)
-graph export "`output_stats'/BoxEducationVsEarnings.eps", replace
+graph hbox Test , over(Education, descending) by(Female, rows(2)) nooutside scheme(pretty1) ///
+    ytitle("Earnings") name("BoxEarningsVsEducation`gender'", replace)
+graph export "`output_stats'/BoxEducationVsEarnings`gender'.eps", replace
 
 
 
@@ -177,8 +165,8 @@ gen LogPredictFullTime = log(PredictFullTime + 1)
 lpoly LogPredictFullTime LogPredict12Months if Predict12Months < 20000, ///
     scheme(pretty1) xtitle("Predicted Revenue, 1 yr") ///
     ytitle("Predicted # Full Employees, 3yrs") ///
-    name("PredEarningsVsPredEmp", replace)
-graph export "`output_stats'/PredEarningsVsPredEmp.eps", replace
+    name("PredEarningsVsPredEmp`gender'", replace)
+graph export "`output_stats'/PredEarningsVsPredEmp`gender'.eps", replace
 
 gen Predict12Over3 = Predict12Months /Predict3Months
 replace Predict12Over3 = -777 if Predict3Months == 0
@@ -209,30 +197,32 @@ local ratio_vars = "Predict12Over3 GoodOverBad3Months " ///
     + "GoodOverBad12Months GoodOverPredict12Months " ///
     + "PredictOverBad12Months Predict12Over3Ratio"
 foreach var of local ratio_vars {
-    pretty (hist `var', xlogbase(1.2) frac ) ,  name("`var'") xtitle("") ///
+    pretty (hist `var', xlogbase(1.2) frac by(Female, rows(2)) ) ,  name("`var'") xtitle("") ///
         save("`output_stats'/`var'.eps")
 }
 
 dr ^Sources*
 local test = r(varlist)
-pretty_hbar `r(varlist)' if FounderFlag == 1, name("FundingSources") ///
- save("`output_stats'/FundingSources.eps")
+graph hbar `test' if FounderFlag == 1, scheme(pretty1) legend(off) ///
+    over(Female) nolabel showyvars name("Sources", replace) ///
+    title("What sources of funding were used to start" "this business in the first year?")
+graph export "`output_stats'/FundingSources`gender'.eps", replace
 
-dr ^Challenges*
-local test = r(varlist)
-pretty_hbar `r(varlist)' if FounderFlag == 1 & inlist(SurveyRound, 1, 3, 4), name("Challenges") ///
-  save("`output_stats'/Challenges.eps")
 
 dr ^Key*
 local test = r(varlist)
 local test = regexr("`test'", "KeyLearning", "")
-pretty_hbar `test' if FounderFlag == 1 & SurveyRound == 2, name("KeyFactors") ///
-   save("`output_stats'/KeyFactors.eps")
+graph hbar `test' if FounderFlag == 1 & SurveyRound == 2, scheme(pretty1) legend(off) ///
+    over(Female) nolabel showyvars name("KeyFactors", replace) ///
+    title("What were the key factors in deciding" "to start this business?")
+graph export "`output_stats'/KeyFactors`gender'.eps", replace
 
 dr ^WhyOtherJob*
 local test = r(varlist)
-pretty_hbar `r(varlist)' if OtherJobFlag == 1, name("WhyOtherJob") ///
-    save("`output_stats'/WhyOtherJob.eps")
+graph hbar `test' if OtherJobFlag == 1, scheme(pretty1) legend(off) ///
+    over(Female) nolabel showyvars name("WhyOtherJob", replace) ///
+    title("Why are you still working in another" "job, rather than focusing on this" "business full-time?")
+graph export "`output_stats'/WhyOtherJob`gender'.eps", replace
 
 
 gen NewRatio = Predict12Months / (Predict3Months * 4)

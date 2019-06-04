@@ -11,10 +11,13 @@ local raw_survey = "`raw_data'/Survey"
 local raw_completed = "`raw_survey'/CompletedWaves"
 local raw_internal = "`raw_survey'/Internal"
 local raw_sampling = "`raw_survey'/Sampling"
+local raw_operations = "`raw_survey'/Operations"
 local raw_distribution = "`raw_survey'/Distribution"
 local ReferenceUSA = "`raw_data'/ReferenceUSA"
 local compustat = "`raw_data'/Compustat"
 local tiger = "`raw_geo'/TIGER"
+local raw_bds = "`raw_data'/BDS"
+local raw_ase = "`raw_data'/ASE"
 
 ** Clean Data
 local clean_data = "`data'/Clean"

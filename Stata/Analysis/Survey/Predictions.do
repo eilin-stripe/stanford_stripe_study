@@ -52,21 +52,25 @@ pretty (scatter Predict3Months EndDate , ylogbase(`logbase')),  ///
     ytitle("Predicted 3 Month Revenue ") ///
     name("Pred3MonthVsSurveyDate") save("`outdir'/Pred3MonthVsSurveyDate.eps")
 
-pretty (scatter Actual3Month Predict3Months if Month == 1, xlogbase(`logbase') ylogbase(`logbase')) ///
-    (scatter Actual3Month Predict3Months if Month == 2, xlogbase(`logbase') ylogbase(`logbase')), ///
+/*
+pretty (scatter Actual3Months Predict3Months if Month == 1, xlogbase(`logbase') ylogbase(`logbase')) ///
+    (scatter Actual3Months Predict3Months if Month == 2, xlogbase(`logbase') ylogbase(`logbase')), ///
     xtitle("Predicted 3 Month Revenue ") ytitle("Estimated Actual 3 Month") ///
     legend(label(1 "January") label(2 "February")) ///
     name("ActualVsPred3Month") save("`outdir'/ActualVsPred3Month.eps")
+*/
 
-gen Actual3MonthAdj = Actual3Month
+gen Actual3MonthAdj = Actual3Months
 replace Actual3MonthAdj = Predict3Months if abs(Actual3MonthAdj - Predict3Months) < 1000
 replace Actual3MonthAdj = round(Actual3MonthAdj, 1000)
 
+/*
 pretty (scatter Actual3MonthAdj Predict3Months if Month == 1, xlogbase(`logbase') ylogbase(`logbase')) ///
     (scatter Actual3MonthAdj Predict3Months if Month == 2, xlogbase(`logbase') ylogbase(`logbase')), ///
     xtitle("Predicted 3 Month Revenue ") ytitle("Rounded Estimated Actual 3 Month") ///
     legend(label(1 "January") label(2 "February")) ///
     name("ActualAdjVsPred3Month") save("`outdir'/ActualAdjVsPred3Month.eps")
+*/
 
 gen Range = Good3Month - Bad3Months
 gen StdRange = Range / Predict3Months
@@ -90,11 +94,13 @@ pretty (scatter StdRange_w Predict3Months , xlogbase(2) ) , ///
     ytitle("Normalized Prediction Range") ///
     name("RangeVsPred3Month") save("`outdir'/RangeVsPred3Month.eps")
 
+/*
 * pretty (scatter StdRange AllTrans if StdRange < 1000, xlogbase(2) )
 pretty (scatter StdRange_w AllTrans , xlogbase(2) ), ///
     xtitle("Total Transactions Ever") ///
     ytitle("Normalized Prediction Range") ///
     name("RangeVsAllTrans") save("`outdir'/RangeVsAllTrans.eps")
+*/
 
 * pretty (scatter StdRange LastYearTrans if StdRange < 1000, xlogbase(2) )
 pretty (scatter StdRange_w LastYearTrans , xlogbase(2) ) ,  ///
