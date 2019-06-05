@@ -60,7 +60,7 @@ rename support_phone Phone
 rename first_name FirstName
 rename last_name LastName
 rename wave WaveTemp
-rename datesent DateSent
+rename datesent DateSent2
 
 replace WaveTemp = "Wave 1" if WaveTemp == "WAVE 1"
 replace WaveTemp = "Wave 2" if WaveTemp == "WAVE 2"
@@ -89,6 +89,8 @@ destring Phone, replace
 format Phone %12.0g
 
 format DateSent %td
+
+rename ExternalReference merchant_id
 
 save "`save'" , replace
 

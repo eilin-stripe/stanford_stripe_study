@@ -80,9 +80,18 @@ drop npv_19_temp
 bysort merchant (ndate): keep if _n == 1
 
 
+// merge with sampling data
+merge 1:1 merchant_id using "`clean_sampling'/Sample.dta"
+keep if _merge == 3
+drop _merge
 
-* read in sampling data
-use "`clean_sampling'/Sample.dta", clear
+merge 1:1 merchant_id using "`clean_sampling'/Sample2.dta"
+* keep completed surveys
+drop if missing(EndDate)
+
+replace DateSent = DateSent2 if missing(DateSent)
+drop DateSent2
 
 
-merge 1:1 merchant_id using "sta_files/round1_dp.dta"
+
+
