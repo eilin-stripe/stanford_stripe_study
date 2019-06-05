@@ -91,4 +91,6 @@ replace Phone = regexr(Phone, "[,]?x[0-9]+", "")
 destring Phone, replace
 format Phone %12.0g
 
+rename ExternalReference merchant_id
+
 save "`save'" , replace
