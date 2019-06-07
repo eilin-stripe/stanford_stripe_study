@@ -120,6 +120,8 @@ replace startupfunds = 7 if StartingFunding == 4
 replace startupfunds = 8 if StartingFunding == 6
 replace startupfunds = 9 if StartingFunding == 1
 replace startupfunds = 10 if StartingFunding == 7
+label define supfunds_l 1 "<1k" 2 "1k -5k" 3 "5k -10k" 4 "10k - 25k" 5 "25k - 50k" 6 "50k - 100k" 7 "100k - 250k" 8 "250k - 1mil" 9 "1mil - 3mil" 10 ">3mil"
+label values startupfunds supfunds_l
 
 *t1-f9
 catplot startupfunds female_int if n == 1, percent(female_int)stack asyvars bar(1, bcolor(emidblue*1)) bar(2, bcolor(teal*0.8)) bar(3, bcolor(erose*0.6)) bar(4, bcolor(lavender*0.4)) bar(5, bcolor(red*0.2)) bar(6, bcolor(orange*0.2))graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 

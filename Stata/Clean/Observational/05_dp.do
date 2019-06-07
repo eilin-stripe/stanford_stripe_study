@@ -22,9 +22,8 @@ cd "/Users/eilin/Documents/SIE"
 local raw_dir "01_raw_data"
 local clean_dir "sta_files"
 */
-*******************************************************************************
-** Set up Measures of How close they were
-*******************************************************************************
+
+
 
 // read data
 import delimited "`raw_dir'/r1_npv.csv", varnames(1) encoding(ISO-8859-1) clear
