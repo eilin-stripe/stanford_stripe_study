@@ -27,6 +27,9 @@ local clean_dir "sta_files"
 
 use "`clean_dir'/round1_dp.dta", clear
 
+
+
+
 *******************************************************************************
 ** DHS GROWTH RATES
 *******************************************************************************
@@ -75,4 +78,73 @@ label variable dhs_18 "MoM growth rate (2018)"
 bysort merchant (timestamp_m): egen dhs_18_mean = mean(dhs_18)
 bysort merchant (timestamp_m): replace dhs_18_mean = . if _n != 1
 label variable dhs_18_mean "Mean growth 2018"
+
+
+** merge survey data
+merge m:1 merchant_id using "`clean_dir'/round1.dta"
+keep if _merge == 3
+drop _merge
+
+
+/// keep surveys completed by March 31
+keep if EndDateTemp <= "2019-03-31"
+
+** for january 2019 survey completion
+local j1 = date("2019-01-01", "YMD")
+local j2 = date("2019-02-01", "YMD")
+loca j3 = date("2019-03-01", "YMD")
+
+bysort merchant_id (year month): gen actual3months = sum(npv_monthly) if EndDateTemp <= "2019-01-31" & (ndate == `j1' | ndate == `j2' | ndate == `j3')
+
+bysort merchant_id (year month): gen actual3m_temp = actual3months if !missing(actual3months)
+bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_n - 1] if missing(actual3months) & _n > 1
+bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_N]
+bysort merchant_id (year month): replace actual3months = actual3m_temp if _n == 1 & (EndDateTemp >="2019-01-01" & EndDateTemp <= "2019-01-31")
+drop actual3m_temp
+
+
+** february 2019 completion
+local f1 = date("2019-02-01", "YMD")
+local f2 = date("2019-03-01", "YMD")
+loca f3 = date("2019-04-01", "YMD")
+
+bysort merchant_id (year month): replace actual3months = sum(npv_monthly) if EndDateTemp <= "2019-02-28" & (ndate == `f1' | ndate == `f2' | ndate == `f3')
+
+bysort merchant_id (year month): gen actual3m_temp = actual3months if !missing(actual3months)
+bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_n - 1] if missing(actual3months) & _n > 1
+bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_N]
+bysort merchant_id (year month): replace actual3months = actual3m_temp if _n == 1 & (EndDateTemp >= "2019-02-01" & EndDateTemp <= "2019-02-28")
+drop actual3m_temp
+
+
+** march 2019 completion
+local m1 = date("2019-03-01", "YMD")
+local m2 = date("2019-04-01", "YMD")
+local m3 = date("2019-05-01", "YMD")
+
+bysort merchant_id (year month): replace actual3months = sum(npv_monthly) if EndDateTemp <= "2019-03-31" & (ndate == `m1' | ndate == `m2' | ndate == `m3')
+
+bysort merchant_id (year month): gen actual3m_temp = actual3months if !missing(actual3months)
+bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_n - 1] if missing(actual3months) & _n > 1
+bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_N]
+bysort merchant_id (year month): replace actual3months = actual3m_temp if _n == 1 & (EndDateTemp >= "2019-03-01" & EndDateTemp <= "2019-03-31")
+drop actual3m_temp
+
+
+
+
+
+
+** rouding correction
+gen Actual3MonthsHigh = (npv_19q1 * 1.1)
+gen Actual3MonthsLow = (npv_19q1 / 1.1)
+gen Actual3MonthsHighRound = round(npv_19q1, 1000)
+gen Actual3MonthsLowRound = round(npv_19q1, 1000)
+
+
+** multiplying qualtrics entry by 1000
+foreach var of varlist Bad3Months Predict3Months Good3Months{
+	replace `var' = `var' * 1000
+}
+
 
