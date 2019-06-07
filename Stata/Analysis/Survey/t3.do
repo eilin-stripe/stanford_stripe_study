@@ -1,8 +1,8 @@
 *******************************************************************************
 ** OVERVIEW
 **
-** this dofile uses cleaned round1 data and cleans up for analysis
-** and mean mom growth in 2018
+** this dofile uses cleaned round1 data to look at gender stats
+** 
 **
 *******************************************************************************
 
