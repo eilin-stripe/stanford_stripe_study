@@ -36,46 +36,73 @@ local clean_sampling "02_clean_sample"
 ** Set up Measures of How close they were
 *******************************************************************************
 
-* read in npv data
-use "sta_files/round1_dp.dta", clear
+// read data
 
-* growth rate from 2018q1 to 2019 q1
-
-////	time for redshift data
-rename month timestamp
-gen year = regexs(0) if regexm(timestamp,"[0-9]+")
-label variable year "Year of observation"
-gen month = regexs(2) if regexm(timestamp, "([0-9]*)[-]([0-9]*)")
-label variable month "Month of observation"
-gen day=regexs(5) if regexm(timestamp, "([0-9]+)(\-)([0-9]+)(\-)([0-9]+)") //note: day is meaningless because aggregated to 1st when pulling from db
-destring year month day, replace
-gen ndate = mdy(month, day, year)
-** first observation of user
-bysort merchant (year month): gen n = _n
-
-// changing negative npv; first pass
-replace npv__monthly = 0 if npv__monthly < 0 
+cd "/Users/eilin/Documents/SIE"
+local raw_dir "01_raw_data"
+local clean_dir "sta_files"
+*/
 
 
-local j18 = date("01-01-2018", "MDY")
-local f18 = date("02-01-2018", "MDY")
-local m18 = date("03-01-2018", "MDY")
+// read data
 
-local j19 = date("01-01-2019", "MDY")
-local f19 = date("02-01-2019", "MDY")
-local m19 = date("03-01-2019", "MDY")
+use "`clean_dir'/round1_dp.dta", clear
 
-bysort merchant (ndate): gen npv_18_q1 = sum(npv__monthly) if ndate >= `j18' & ndate <= `m18'
-gen npv_18_temp = npv_18_q1 if !missing(npv_18_q1)
-bysort merchant (ndate): replace npv_18_temp = npv_18_temp[_n-1] if missing(npv_18_temp)
-bysort merchant (ndate): replace npv_18_q1 = npv_18_temp[_N] if _n == 1
-drop npv_18_temp
+*******************************************************************************
+** DHS GROWTH RATES
+*******************************************************************************
 
-bysort merchant (ndate): gen npv_19_q1 = sum(npv__monthly) if ndate >= `j19' & ndate <= `m19'
-gen npv_19_temp = npv_19_q1 if !missing(npv_19_q1)
-bysort merchant (ndate): replace npv_19_temp = npv_19_temp[_n-1] if missing(npv_19_temp)
-bysort merchant (ndate): replace npv_19_q1 = npv_19_temp[_N] if _n == 1
-drop npv_19_temp
+* replace refunds to npv = 0
+replace npv_monthly = 0 if npv_monthly < 0
+
+
+//// 2018q1 - 2019q1
+
+local j18 = date("2018-01-01", "YMD")
+local f18 = date("2018-02-01", "YMD")
+local m18 = date("2018-03-01", "YMD")
+
+local j19 = date("2019-01-01", "YMD")
+local f19 = date("2019-02-01", "YMD")
+local m19 = date("2019-03-01", "YMD")
+
+* npv_18q1
+bysort merchant (timestamp_m): gen npv_18q1 = sum(npv_monthly) if (ndate >= `j18' & ndate <= `m18')
+bysort merchant (timestamp_m): replace npv_18q1 = npv_18q1[_n - 1] if missing(npv_18q1)
+bysort merchant (timestamp_m): replace npv_18q1 = npv_18q1[_N] if _n == 1
+bysort merchant (timestamp_m): replace npv_18q1 = . if _n != 1
+
+* npv_19q1
+bysort merchant (timestamp_m): gen npv_19q1 = sum(npv_monthly) if (ndate >= `j19' & ndate <= `m19')
+bysort merchant (timestamp_m): replace npv_19q1 = npv_19q1[_n - 1] if missing(npv_19q1)
+bysort merchant (timestamp_m): replace npv_19q1 = npv_19q1[_N] if _n == 1
+bysort merchant (timestamp_m): replace npv_19q1 = . if _n != 1
+
+
+//// quarterly growth rate
+gen num = npv_19q1 - npv_18q1
+gen den = 0.5 * (npv_19q1 + npv_18q1)
+gen dhs_q = num/den
+label variable dhs_q "First quarter growth rate"
+
+replace dhs_q = 0 if npv_18q1 == 0 & npv_19q1 == 0	//replace dhs_q = 0 for firms that had 0 npv in q1 of both years
+drop num den
+
+//// average mom 2018
+bysort merchant (timestamp_m): gen  num = npv_monthly - npv_monthly[_n - 1] if year == 2018
+bysort merchant (timestamp_m): gen  den = 0.5 * (npv_monthly + npv_monthly[_n - 1]) if year == 2018
+gen dhs_18 = num/den
+label variable dhs_18 "MoM growth rate (2018)"
+
+bysort merchant (timestamp_m): egen dhs_18_mean = mean(dhs_18)
+bysort merchant (timestamp_m): replace dhs_18_mean = . if _n != 1
+label variable dhs_18_mean "Mean growth 2018"
+
+
+** merge survey data
+merge m:1 merchant_id using "`clean_dir'/round1.dta"
+keep if _merge == 3
+drop _merge
 
 * keep one obs per user to merge
 bysort merchant (ndate): keep if _n == 1

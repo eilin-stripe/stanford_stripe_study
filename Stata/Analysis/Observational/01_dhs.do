@@ -242,3 +242,14 @@ label define strata_l 0 "Funded" 1 "Large" 2 "Small"
 label values strata_int strata_l
 catplot prediction strata_int, percent(strata_int)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
+
+** expectaion and variance in transaction count
+**01_dhs_f7
+merge m:1 merchant_id using "/Users/eilin/Desktop/trans_count.dta"
+catplot prediction trans_var_quartile if n == 1, percent(trans_var_quartile)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+
+
+** expectations and variance in trasaction value
+bysort merchant_id (timestamp_m): egen npv_sd = sd(npv_monthly)
+bysort merchant_id (timestamp_m): gen npv_var = npv_sd ^2 if _n == 1
+xtile npv_var_quartile = trans_var,n(4)
