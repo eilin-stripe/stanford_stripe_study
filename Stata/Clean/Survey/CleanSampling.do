@@ -12,14 +12,25 @@
 set more off
 clear
 
+/*rf
 ** Setup Paths
 findbase "Stripe"
 local base = r(base)
 include `base'/Code/Stata/file_header.do
+*/
+
+*ef
+** Setup Paths
+cd "/Users/eilin/Documents/SIE"
+local raw_sampling "01_raw_data"
+local clean_sampling "02_clean_sample"
+*/
 
 
 local use = "`raw_sampling'/sample_us_181106_1.xlsx"
 local save = "`clean_sampling'/Sample.dta"
+
+
 *******************************************************************************
 ** Import the Strata by excel sheet
 *******************************************************************************
@@ -79,5 +90,15 @@ replace Phone = regexr(Phone, "[,]?ext[0-9]+", "")
 replace Phone = regexr(Phone, "[,]?x[0-9]+", "")
 destring Phone, replace
 format Phone %12.0g
+
+rename ExternalReference merchant_id
+
+
+////	integer indicator for strata
+gen strata_int = 0 if strata == "funded"
+replace strata_int = 1 if strata == "big"
+replace strata_int = 2 if strata =="small"
+label define strata_l 0 "Funded" 1 "Large" 2 "Small"
+label values strata_int strata_l
 
 save "`save'" , replace

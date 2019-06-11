@@ -13,7 +13,7 @@ local raw_dir "01_raw_data/"
 local clean_dir "sta_files/"
 local tables "07_Output/"
 
-use "`clean_dir'round1_dp.dta", clear
+use "`clean_dir'round1.dta", clear
 
 ////	keep finished surveys & strata
 drop if Finished == 1
@@ -22,7 +22,7 @@ replace strata_int = 1 if strata == "big"
 replace strata_int = 2 if strata =="small"
 
 
-////	time for redshift data
+/*///	time for redshift data
 rename month timestamp
 gen year = regexs(0) if regexm(timestamp,"[0-9]+")
 label variable year "Year of observation"
@@ -32,7 +32,7 @@ gen day=regexs(5) if regexm(timestamp, "([0-9]+)(\-)([0-9]+)(\-)([0-9]+)") //not
 destring year month day, replace
 gen ndate = mdy(month, day, year)
 ** first observation of user
-bysort merchant (year month): gen n = _n
+bysort merchant (year month): gen n = _n*/
 
 
 ////	female indicator
@@ -50,12 +50,16 @@ label values female_int female_l2
 
 
 ////	firm type by gender (t1_f1)
-catplot strata_int female if n == 1, percent(female)stack asyvars bar(1, bcolor(teal*0.8)) bar(2, bcolor(orange*0.7)) bar(3, bcolor(gs6)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) legend(label(1 "Funded") label(2 "Large") label(3 "Small"))
+*catplot strata_int female if n == 1, percent(female)stack asyvars bar(1, bcolor(teal*0.8)) bar(2, bcolor(orange*0.7)) bar(3, bcolor(gs6)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) legend(label(1 "Funded") label(2 "Large") label(3 "Small"))
 
 
 ////	reason by gender
+collapse (mean)KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther, by (female)
+foreach var of varlist KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther{
+replace `var' = `var'[2] - `var'[1] if female == .
+}
+
 preserve
-keep if n == 1
 label define yn 0 "No" 1 "Yes"
 label values KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive yn
 longshape KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive, i(merchant_id) j(ques) y(ans) replace
@@ -120,6 +124,8 @@ replace startupfunds = 7 if StartingFunding == 4
 replace startupfunds = 8 if StartingFunding == 6
 replace startupfunds = 9 if StartingFunding == 1
 replace startupfunds = 10 if StartingFunding == 7
+label define supfunds_l 1 "<1k" 2 "1k -5k" 3 "5k -10k" 4 "10k - 25k" 5 "25k - 50k" 6 "50k - 100k" 7 "100k - 250k" 8 "250k - 1mil" 9 "1mil - 3mil" 10 ">3mil"
+label values startupfunds supfunds_l
 
 *t1-f9
 catplot startupfunds female_int if n == 1, percent(female_int)stack asyvars bar(1, bcolor(emidblue*1)) bar(2, bcolor(teal*0.8)) bar(3, bcolor(erose*0.6)) bar(4, bcolor(lavender*0.4)) bar(5, bcolor(red*0.2)) bar(6, bcolor(orange*0.2))graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 

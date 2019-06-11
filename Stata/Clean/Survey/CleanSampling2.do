@@ -13,10 +13,18 @@ set more off
 clear
 
 ** Setup Paths
+/*rf
 findbase "Stripe"
 local base = r(base)
 include `base'/Code/Stata/file_header.do
+*/
 
+*ef
+** Setup Paths
+cd "/Users/eilin/Documents/SIE"
+local raw_sampling "01_raw_data"
+local clean_sampling "02_clean_sample"
+*/
 
 local use = "`raw_sampling'/sample_us_190322_2.xlsx"
 local save = "`clean_sampling'/Sample2.dta"
@@ -52,7 +60,7 @@ rename support_phone Phone
 rename first_name FirstName
 rename last_name LastName
 rename wave WaveTemp
-rename datesent DateSent
+rename datesent DateSent2
 
 replace WaveTemp = "Wave 1" if WaveTemp == "WAVE 1"
 replace WaveTemp = "Wave 2" if WaveTemp == "WAVE 2"
@@ -81,6 +89,8 @@ destring Phone, replace
 format Phone %12.0g
 
 format DateSent %td
+
+rename ExternalReference merchant_id
 
 save "`save'" , replace
 
