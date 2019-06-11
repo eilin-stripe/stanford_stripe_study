@@ -36,6 +36,10 @@ merge 1:1 ExternalReference  using "`demographics'"
 keep if _merge == 3
 drop _merge
 
+merge 1:1 ExternalReference using "`Growth'"
+keep if _merge == 3
+drop _merge
+
 replace Finished = 0 if Finished == .
 
 gen LogLifetimeVolume = log(LifetimeVolume)
@@ -163,6 +167,10 @@ local numbox = 5
 xtile DateTile = FirstSaleYear , nquantiles(`numbox')
 xtile RevTile = PrevMonthlyRev , nquantiles(`numbox')
 xtile TransTile = PrevMonthlyTrans , nquantiles(`numbox')
+xtile Growth1Tile = Growth1 , nquantiles(`numbox')
+xtile Growth12Tile = Growth12 , nquantiles(`numbox')
+xtile Growth12QuarterTile = Growth12Quarter , nquantiles(`numbox')
+
 xtile AgeTile = Age , nquantiles(`numbox')
 sum Age
 local min = r(min)
@@ -228,6 +236,7 @@ by PreviousBusinesses: egen MeanOverDatePrevBus = mean(Over)
 by PreviousBusinesses: egen MeanBelowDatePrevBus = mean(Below)
 by PreviousBusinesses: egen MeanOutOfRangeDatePrevBus = mean(OutOfRange)
 egen PreviousBusinessesTag = tag(PreviousBusinesses)
+
 
 *******************************************************************************
 ** Prediction Accuracy Vs. Experience
@@ -323,6 +332,30 @@ graph hbar , over(Bigger) asyvars stack over(DateSent, descending) percent ///
 graph rename DateSentAccuracy, replace
 graph export "`outdir'/DateSentAccuracy.eps", replace
 
+graph hbar , over(Bigger) asyvars stack over(Growth12Tile, descending) percent ///
+    scheme(pretty1) legend( region(lwidth(none)) col(5) stack) ///
+    bar(1, color(edkblue)) bar(2, color(ebblue)) ///
+    bar(3, color(eltblue)) bar(4, color(lavender)) ///
+    bar(5, color(purple)) ytitle("") title("Year-On-Year Growth")
+graph rename Growth12Accuracy, replace
+graph export "`outdir'/Growth12Accuracy.eps", replace
+
+graph hbar , over(Bigger) asyvars stack over(Growth1Tile, descending) percent ///
+    scheme(pretty1) legend( region(lwidth(none)) col(5) stack) ///
+    bar(1, color(edkblue)) bar(2, color(ebblue)) ///
+    bar(3, color(eltblue)) bar(4, color(lavender)) ///
+    bar(5, color(purple)) ytitle("") title("Prior Month Growth")
+graph rename Growth1Accuracy, replace
+graph export "`outdir'/Growth1Accuracy.eps", replace
+
+graph hbar , over(Bigger) asyvars stack over(Growth12QuarterTile, descending) percent ///
+    scheme(pretty1) legend( region(lwidth(none)) col(5) stack) ///
+    bar(1, color(edkblue)) bar(2, color(ebblue)) ///
+    bar(3, color(eltblue)) bar(4, color(lavender)) ///
+    bar(5, color(purple)) ytitle("") title("Year-On-Year Growth")
+graph rename Growth12QuarterAccuracy, replace
+graph export "`outdir'/Growth12QuarterAccuracy.eps", replace
+
 *******************************************************************************
 **
 *******************************************************************************
@@ -374,6 +407,39 @@ plotmatrix, mat(Means) split(0(.1)2) color(eltblue) aspect(1) ///
     legend( region(lcolor(white)) position(3) col(1)) ///
     ylabel(0 "5" -1 "4" -2 "3" -3 "2" -4 "1",angle(0)) xlabel(1 "0" 2 "1" 3 "2" 4 "3" 5 "4" 6 "5+", angle(0))
 graph export "`outdir'/PrevBusRevenueHeatmap.eps", replace
+
+
+
+forvalues ii = 1/`numbox' {
+    forvalues jj = 1/`numbox' {
+        sum Out if Growth12QuarterTile == `ii' & RevTile == `jj'
+        matrix Means[6-`jj', `ii'] = r(mean)
+    }
+}
+
+plotmatrix, mat(Means) split(0(.1)1.7) color(eltblue) aspect(1) ///
+    xtitle("Growth Quintile") ytitle("Revenue Quintile") ///
+    title("Estimation Accuracy by " "Growth and Revenue on Stripe")  ///
+    name("Growth12QuarterRevenueHeatmap", replace) ///
+    legend( region(lcolor(white)) position(3) col(1)) ///
+    ylabel(0 "5" -1 "4" -2 "3" -3 "2" -4 "1",angle(0)) xlabel(1(1)`numbox', angle(0))
+graph export "`outdir'/Growth12QuarterRevenueHeatmap.eps", replace
+
+forvalues ii = 1/`numbox' {
+    forvalues jj = 1/`numbox' {
+        sum Bigger if Growth12QuarterTile == `ii' & RevTile == `jj'
+        matrix Means[6-`jj', `ii'] = r(mean)
+    }
+}
+
+plotmatrix, mat(Means) split(-2(.2)2) color(eltblue) aspect(1) ///
+    xtitle("Growth Quintile") ytitle("Revenue Quintile") ///
+    title("Estimation Accuracy by " "Growth and Revenue on Stripe")  ///
+    name("Growth12QuarterRevenueHeatmap", replace) ///
+    legend( region(lcolor(white)) position(3) col(1)) ///
+    ylabel(0 "5" -1 "4" -2 "3" -3 "2" -4 "1",angle(0)) xlabel(1(1)`numbox', angle(0))
+graph export "`outdir'/Growth12QuarterRevenueHeatmap.eps", replace
+
 
 /*
 
