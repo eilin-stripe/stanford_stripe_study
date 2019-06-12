@@ -103,3 +103,32 @@ label define LegalType 1 "Sole Prop" 2 "Partnership" 3 "LLC" ///
     4 "Corporation" 5 "Non Profit"
 label define ConnectType 1 "Direct" 2 "Standard" 3 "Platform" ///
     4 "Express"
+
+// Round 2 Variables
+label define PhysicalOnlineBoth 1 "Physical" 2 "Online" 3 "Both"
+label define NumKPIs 0 "0" 1 "1-2" 2 "3-9" 3 "10+"
+label define Frequency 0 "Never" 1 "Yearly" 2 "Quarterly" ///
+     3 "Monthly" 4 "Weekly" 5 "Daily"
+label define ProblemAdressingMethod ///
+    0 "No problem has ever arisen" 1 "Fixed it, no further action" ///
+    2 "Fixed it, took further action" 3 "Continuous improvement process"
+label define TargetsTimeFrame ///
+    0 "No targets" 1 "Short term" 2 "Long term" 3 "Both"
+label define TargetsDifficulty ///
+    1 "Minimal Effort" 2 "Less than normal effort" 3 "Normal effort" ///
+    4 "More than normal effort" 5 "Extraordinary effort"
+label define HowPromoteEmployees ///
+    1 "Not normally promoted" 2 "Partly performance/ability" ///
+    3 "Solely performance/ability"
+label define UnderperforingEmployee ///
+    0 "None Identified" 1 "Never" 2 "< 6 Months" 3 "> 6 Months"
+label define RecordsMethod ///
+    0 "No Records" 1 "Paper" 2 "Electronic" 3 "Kept by another business"
+label define RecordsUsedHow ///
+    1 "Taxes" 2 "Targeting Customers" 3 "Forecasting Demand" ///
+    4 "Ordering Inputs" 5 "Product Design"  ///
+    6 "Scheudling Deliveries" -888 "Other" 
+
+
+
+*******************************************************************************

@@ -130,9 +130,8 @@ qui {
     label variable qid22 "Please briefly describe this business"
     label variable qid66 "Please briefly describe this business's mission"
     label variable qid105_6_text "What are your biggest current challenges for this business?  OTHER"
-    label variable qid81 "About how much in revenue did this business generate over the last 12 months? "
-    label variable qid82 "Of your total revenue, what percent took place online? "
-    label variable qid83 "Of your total revenue, what percent took place on Stripe? "
+
+
     label variable qid91 "What was your revenue on Stripe last month?"
     label variable qid92 "What do you predict your revenue on Stripe will be over the next 3 months?"
     label variable qid95 "What do you predict your revenue on Stripe will be over the next 12 months ?"
