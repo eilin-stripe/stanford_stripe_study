@@ -93,6 +93,7 @@ bysort merchant (timestamp_m): gen  num = npv_monthly - npv_monthly[_n - 1] if y
 bysort merchant (timestamp_m): gen  den = 0.5 * (npv_monthly + npv_monthly[_n - 1]) if year == 2018
 gen dhs_18 = num/den
 label variable dhs_18 "MoM growth rate (2018)"
+drop num den
 
 bysort merchant (timestamp_m): egen dhs_18_mean = mean(dhs_18)
 bysort merchant (timestamp_m): replace dhs_18_mean = . if _n != 1
@@ -118,12 +119,7 @@ merge 1:1 merchant_id using "`clean_sampling'/Sample2.dta"
 drop if missing(EndDate)
 drop _merge
 
-// growth rates
-gen num = npv_19_q1 - npv_18_q1
-gen den = 0.5*(npv_19_q1 + npv_18_q1)
-gen dhs_q = num/den
-label variable dhs_q "DHS growth rate 18q1 to 19q1"
-
+// quarterly growth rates categories
 gen dhs_q_cat = 1 if dhs_q <= -0.30
 replace dhs_q_cat = 2 if dhs_q > -0.30 & dhs_q < 0.30
 replace dhs_q_cat = 3 if dhs_q >= 0.3 & dhs_q != .
@@ -144,15 +140,22 @@ label values DaysToComplete2 DaysToComplete
 
 // plot
 ** small, 13_ttc_f1
-catplot dhs_q_cat DaysToComplete2 if strata =="small", percent(DaysToComplete2)stack asyvars bar(1, bcolor("176 196 222")) bar(2, bcolor("32 178 170")) bar(3, bcolor("125 176 221")) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+catplot dhs_q_cat DaysToComplete2 if strata =="small", percent(DaysToComplete2)stack asyvars bar(1, bcolor(64 0 64)) bar(2, bcolor(99 3 6)) bar(3, bcolor(33 66 0)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
 ** big, 13_ttc_f2
-catplot dhs_q_cat DaysToComplete2 if strata =="big", percent(DaysToComplete2)stack asyvars bar(1, bcolor("176 196 222")) bar(2, bcolor("32 178 170")) bar(3, bcolor("125 176 221")) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+catplot dhs_q_cat DaysToComplete2 if strata =="big", percent(DaysToComplete2)stack asyvars bar(1, bcolor(64 0 64)) bar(2, bcolor(99 3 6)) bar(3, bcolor(33 66 0))  graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
 ** funded, 13_ttc_f2
 catplot dhs_q_cat DaysToComplete2 if strata =="funded", percent(DaysToComplete2)stack asyvars bar(1, bcolor("176 196 222")) bar(2, bcolor("32 178 170")) bar(3, bcolor("125 176 221")) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
+// annual grwoth categories
+gen dhs_m_cat = 1 if dhs_18_mean <= -0.05
+replace dhs_m_cat = 2 if dhs_18_mean > -0.05 & dhs_18_mean < 0.05
+replace dhs_m_cat = 3 if dhs_18_mean >= 0.05
 
+catplot dhs_m_cat DaysToComplete2 if strata =="funded", percent(DaysToComplete2)stack asyvars bar(1, bcolor(64 0 64)) bar(2, bcolor(99 3 6)) bar(3, bcolor(33 66 0)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+catplot dhs_m_cat DaysToComplete2 if strata =="big", percent(DaysToComplete2)stack asyvars bar(1, bcolor(64 0 64)) bar(2, bcolor(99 3 6)) bar(3, bcolor(33 66 0)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+catplot dhs_m_cat DaysToComplete2 if strata =="small", percent(DaysToComplete2)stack asyvars bar(1, bcolor(64 0 64)) bar(2, bcolor(99 3 6)) bar(3, bcolor(33 66 0)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
 // prediction categories
 foreach var of varlist Predict3Months Bad3Months Good3Months{
