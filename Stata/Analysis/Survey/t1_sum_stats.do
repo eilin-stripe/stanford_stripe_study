@@ -54,7 +54,9 @@ label values female_int female_l2
 
 
 ////	reason by gender
-collapse (mean)KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther, by (female)
+replace KeyLifeChangingMoney = 0 if KeyLifeChangingMoney == -777 & !missing(KeyBeBossename)
+replace KeyLifeChangingMoney = . if KeyLifeChangingMoney == -777 & missing(KeyBeBossename)
+collapse (mean)KeyLifeChangingMoney KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther, by (female)
 foreach var of varlist KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther{
 replace `var' = `var'[2] - `var'[1] if female == .
 }
@@ -62,6 +64,11 @@ replace `var' = `var'[2] - `var'[1] if female == .
 preserve
 label define yn 0 "No" 1 "Yes"
 label values KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive yn
+graph hbar KeyLifeChangingMoney KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther, ////
+	bar(1, bcolor(34 0 51)) bar(2, bcolor(128 0 42)) bar(3, bcolor(77 0 51))  bar(4, bcolor(0 51 8))  bar(5, bcolor(153 51 0)) ////
+	bar(6, bcolor(0 25 153)) bar(7, bcolor(230 76 0)) bar(8, bcolor(89 0 179)) graphregion(fcolor(white) ifcolor(white)) ////
+	plotregion(fcolor(white) ifcolor(white))
+
 longshape KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive, i(merchant_id) j(ques) y(ans) replace
 *t1-f2a
 catplot ans ques if female, stack asyvars percent(ques) graphregion(fcolor(white) ifcolor(white)) bar(1, bfcolor(orange*0.7) blcolor(black)) bar(2, bfcolor(teal*0.8) blcolor(black)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) title(Female)
