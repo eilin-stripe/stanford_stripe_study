@@ -49,6 +49,12 @@ label variable female_int "Female=1 notfemale=2"
 label define female_l2 1 "Female" 2 "Not female"
 label values female_int female_l2
 
+** strata indicator
+gen strata_int = 0 if strata == "funded"
+replace strata_int = 1 if strata == "big"
+replace strata_int = 2 if strata =="small"
+label define strata_l 0 "Funded" 1 "Large" 2 "Small"
+label values strata_int strata_l
 
 ** multiplying qualtrics entry by 1000
 foreach var of varlist Bad3Months Predict3Months Good3Months{
@@ -58,13 +64,25 @@ foreach var of varlist Bad3Months Predict3Months Good3Months{
 **** firm age indicator
 gen firm_age = 2019 - FirstCostYear if n == 1
 label variable firm_age "Firm age"
-
+gen firm_age2 = firm_age * firm_age
 
 //// who is growing?
+reg dhs_q i.strata_int if firm_age < 15, robust
+outreg2 using /Users/eilin/Documents/SIE/07_Output/growth_strata, replace ctitle (OLS 1)
 
+reg dhs_q i.strata_int i.strata_int##c.firm_age firm_age2 if firm_age < 15, robust
+outreg2 using /Users/eilin/Documents/SIE/07_Output/growth_strata.tex, append ctitle (OLS 2)
 
+reg dhs_q i.strata_int i.strata_int##c.firm_age firm_age2 female HoursPerWeek PercRevInternational StartingFunding NumEmployees if firm_age < 15, robust
+outreg2 using /Users/eilin/Documents/SIE/07_Output/growth_strata.tex, append ctitle (OLS 3)
 
+margins  i.strata_int, at(firm_age=(1(1)20))
+marginsplot
 
+gen ln_dhs = ln(dhs_q) 
+localp ln_dhs firm_age, gen(mean_ln_dhs) 
+gen gmean_dhs = exp(mean_ln_dhs) 
+line gmean firm_age, sort
 
 ** for january 2019 survey completion
 local j1 = date("2019-01-01", "YMD")
