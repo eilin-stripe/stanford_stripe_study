@@ -12,7 +12,7 @@
 set more off
 clear
 
-** Setup Paths
+*/* Setup Paths
 findbase "Stripe"
 local base = r(base)
 qui include `base'/Code/Stata/file_header.do
@@ -20,7 +20,11 @@ qui include `base'/Code/Stata/file_header.do
 local in = "`raw_ase'/ASE_2016_OwnerAge/ASE_2016_00CSCBO08.csv"
 local prediction_check = "`clean_main_survey'/PredictionCheck.dta"
 
-local outdir = "`output'/NickLunch"
+local outdir = "`output'/NickLunch"*/
+
+* ef
+cd "/Users/eilin/Documents/SIE"
+local in "02_clean_sample/ASE_2016_OwnerAge/ASE_2016_00CSCBO08.csv"
 *******************************************************************************
 **
 *******************************************************************************
@@ -59,9 +63,17 @@ replace Firms = Firms / totalfirms
 tempfile ase
 save "`ase'"
 
-use "`prediction_check'"
+*use "`prediction_check'"
+use "/Users/eilin/Documents/SIE/sta_files/round1.dta"
 
-keep if Finished == 1
+*keep if Finished == 1
+keep if Finished == 2
+
+* weights
+gen weight = 0.124 if strata == "funded"
+replace weight = 1.831 if strata == "big"
+replace weight = 1.236 if strata == "small"
+
 rename Age AgeTemp
 gen Age = .
 replace Age = 0 if AgeTemp < 25
@@ -78,7 +90,8 @@ label values Age Age
 
 gen Firmssurvey = 1
 drop if Age == .
-collapse (sum) Firmssurvey, by(Age)
+collapse (sum) Firmssurvey[w = weight] , by(Age)
+*collapse (sum) Firmssurvey, by(Age)
 
 egen totalfirmssurvey = total(Firmssurvey)
 replace Firmssurvey = Firmssurvey / totalfirms
@@ -86,6 +99,9 @@ replace Firmssurvey = Firmssurvey / totalfirms
 merge 1:1  Age using "`ase'"
 replace Firmssurvey = - Firmssurvey
 
+twoway (bar Firmssurvey Age, fcolor(purple) lcolor(white) lwidth(medium) horizontal barwidth(1)) (bar Firms Age, fcolor(dknavy) lcolor(white) ////
+	lwidth(medium) horizontal barwidth(1)), ylabel(, labels angle(horizontal) valuelabel) 
+	
 twoway (bar Firms Age , horizontal) || ///
     (bar Firmssurvey Age, horizontal) , ///
     scheme(pretty1) ylabel( 0(1)5, valuelabel) ///

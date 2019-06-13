@@ -12,7 +12,7 @@
 set more off
 clear
 
-** Setup Paths
+*/* Setup Paths
 findbase "Stripe"
 local base = r(base)
 qui include `base'/Code/Stata/file_header.do
@@ -20,7 +20,9 @@ qui include `base'/Code/Stata/file_header.do
 local in = "`raw_bds'/bds_f_age_release.csv"
 local prediction_check = "`clean_main_survey'/PredictionCheck.dta"
 
-local outdir = "`output'/NickLunch"
+local outdir = "`output'/NickLunch"*/
+
+local in "/Users/eilin/Documents/SIE/02_clean_sample/bds_2014.dta"
 *******************************************************************************
 **
 *******************************************************************************
@@ -49,9 +51,11 @@ replace firms = firms / totalfirms
 tempfile bds
 save "`bds'"
 
-use "`prediction_check'"
+*use "`prediction_check'"
+use "/Users/eilin/Documents/SIE/sta_files/round1.dta"
 
-keep if Finished == 1
+*keep if Finished == 1
+keep if Finished == 2
 
 gen FirmAge = 2018 - FirstSaleYear
 replace FirmAge = -777 if FirstSaleYear == -777
