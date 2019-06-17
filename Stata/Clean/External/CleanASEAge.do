@@ -68,6 +68,8 @@ use "/Users/eilin/Documents/SIE/sta_files/round1.dta"
 
 *keep if Finished == 1
 keep if Finished == 2
+// online-focused businesses
+*keep if PercRevOnline >= 50
 
 * weights
 gen weight = 0.124 if strata == "funded"
