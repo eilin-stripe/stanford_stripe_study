@@ -3,6 +3,8 @@
 **
 ** this dofile pulls in dnapanel data on monthly npv from jan 2018 
 ** generates year, month and date variables
+** generates quarterly growth rates for 2018
+**
 **
 *******************************************************************************
 
@@ -48,17 +50,30 @@ gen ndate = mdy(month, day, year)
 
 * replace refunds to npv = 0
 replace npv_monthly = 0 if npv_monthly < 0
-
+* drop 2017 dec values
+drop if year == 2017
 
 //// 2018q1 - 2019q1
 
-local j18 = date("2018-01-01", "YMD")
-local f18 = date("2018-02-01", "YMD")
-local m18 = date("2018-03-01", "YMD")
+local jan18 = date("2018-01-01", "YMD")
+local feb18 = date("2018-02-01", "YMD")
+local mar18 = date("2018-03-01", "YMD")
+local apr18 = date("2018-04-01", "YMD")
+local may18 = date("2018-05-01", "YMD")
+local jun18 = date("2018-06-01", "YMD")
+local jul18 = date("2018-07-01", "YMD")
+local aug18 = date("2018-08-01", "YMD")
+local sep18 = date("2018-09-01", "YMD")
+local oct18 = date("2018-10-01", "YMD")
+local nov18 = date("201811-01", "YMD")
+local dec18 = date("2018-12-01", "YMD")
 
-local j19 = date("2019-01-01", "YMD")
-local f19 = date("2019-02-01", "YMD")
-local m19 = date("2019-03-01", "YMD")
+
+local jan19 = date("2019-01-01", "YMD")
+local feb19 = date("2019-02-01", "YMD")
+local mar19 = date("2019-03-01", "YMD")
+local apr19 = date("2019-04-01", "YMD")
+local may19 = date("2019-05-01", "YMD")
 
 * npv_18q1
 bysort merchant (timestamp_m): gen npv_18q1 = sum(npv_monthly) if (ndate >= `j18' & ndate <= `m18')
