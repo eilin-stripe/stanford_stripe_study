@@ -25,7 +25,7 @@ local clean_dir "sta_files"
 
 // read data
 
-use "`clean_dir'/round1_dp.dta", clear
+use "`clean_dir'/round1.dta", clear
 
 
 

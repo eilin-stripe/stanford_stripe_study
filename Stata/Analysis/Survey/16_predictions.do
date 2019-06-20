@@ -112,12 +112,46 @@ drop actual3m_18temp
 
 bysort merchant_id (year month): replace actual3months = . if _n != 1 
 
-gen predict_cat = 1 if actual3months <= Bad3Months & actual3months != .
-replace predict_cat = 2 if actual3months > Bad3Months & actual3months <= 0.9*Predict3Months & n == 1 & actual3months != .
+gen predict_cat = 5 if actual3months <= Bad3Months & actual3months != .
+replace predict_cat = 4 if actual3months > Bad3Months & actual3months <= 0.9*Predict3Months & n == 1 & actual3months != .
 replace predict_cat = 3 if actual3months >= 0.9*Predict3Months & actual3months <= 1.1*Predict3Months & n == 1 & actual3months != .
-replace predict_cat = 4 if actual3months >= 1.1*Predict3Months & n == 1 & actual3months != .
-replace predict_cat = 5 if actual3months >= Good3Months & n == 1 & actual3months != .
+replace predict_cat = 2 if actual3months >= 1.1*Predict3Months & n == 1 & actual3months != .
+replace predict_cat = 1 if actual3months >= Good3Months & n == 1 & actual3months != .
 // replace predict_cat to missing for those who did not make a prediction
 replace predict_cat = . if Predict3Months == .
 //replace predict_cat to 3 for those who had a revenue of 0 and predicted both expected and worst case to be 0
 replace predict_cat = 3 if actual3months == 0 & Predict3Months == 0 & Good3Months == 0
+
+* prediction histogram
+*histogram predict_cat, discrete fraction fcolor(lavender) lcolor(white) ymtick(, labels valuelabel) xmtick(, labels valuelabel) graphregion(fcolor(white) ifcolor(white)
+
+
+// WHAT EXPLAINS PREDICTION
+
+* 1. firm type? smaller firms seem to over-predict
+gen strata_int = 0 if strata == "funded"
+replace strata_int = 1 if strata == "big"
+replace strata_int = 2 if strata =="small"
+label define strata_l 0 "Funded" 1 "Large" 2 "Small"
+label values strata_int strata_l
+catplot predict_cat strata_int, percent(strata_int)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+
+* 2. previous. business ownership? no
+catplot predict_cat PreviousBusinesses, percent(PreviousBusinesses) stack asyvars
+//yes-no indicator
+gen founding_exp = 1 if PreviousBusinesses >= 2 & n == 1 // PreviousBusinesses starts set at 1
+replace founding_exp = 0 if PreviousBusinesses == 1 & n == 1
+
+* 3. percent revenue online? no
+catplot predict_cat CatPercRevOnline, percent(CatPercRevOnline)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+
+* 4. One founder? no
+gen founder_one = 1 if NumFounders == 1 & n == 1
+replace founder_one = 0 if NumFounders > 1 & n == 1
+catplot predict_cat founder_one, percent(founder_one) stack asyvars
+
+* 5. international revenue share? no
+gen intll_rev_share = 1 if PercRevInternational > 8.7 & n == 1
+replace intll_rev_share = 0 if PercRevInternational <= 8.7 & n == 1
+catplot predict_cat intll_rev_share, percent(intll_rev_share)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
+
