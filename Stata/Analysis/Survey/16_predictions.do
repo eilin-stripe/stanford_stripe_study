@@ -110,10 +110,14 @@ bysort merchant_id (year month): replace actual3m_18temp = actual3m_18temp[_N]
 bysort merchant_id (year month): replace actual3months_18 = actual3m_18temp if _n == 1 & (EndDateTemp >= "2019-03-01" & EndDateTemp <= "2019-03-31")
 drop actual3m_18temp
 
-
+bysort merchant_id (year month): replace actual3months = . if _n != 1 
 
 gen predict_cat = 1 if actual3months <= Bad3Months & actual3months != .
 replace predict_cat = 2 if actual3months > Bad3Months & actual3months <= 0.9*Predict3Months & n == 1 & actual3months != .
 replace predict_cat = 3 if actual3months >= 0.9*Predict3Months & actual3months <= 1.1*Predict3Months & n == 1 & actual3months != .
 replace predict_cat = 4 if actual3months >= 1.1*Predict3Months & n == 1 & actual3months != .
 replace predict_cat = 5 if actual3months >= Good3Months & n == 1 & actual3months != .
+// replace predict_cat to missing for those who did not make a prediction
+replace predict_cat = . if Predict3Months == .
+//replace predict_cat to 3 for those who had a revenue of 0 and predicted both expected and worst case to be 0
+replace predict_cat = 3 if actual3months == 0 & Predict3Months == 0 & Good3Months == 0
