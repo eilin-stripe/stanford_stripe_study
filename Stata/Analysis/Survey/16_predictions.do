@@ -155,3 +155,12 @@ gen intll_rev_share = 1 if PercRevInternational > 8.7 & n == 1
 replace intll_rev_share = 0 if PercRevInternational <= 8.7 & n == 1
 catplot predict_cat intll_rev_share, percent(intll_rev_share)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
+* 6. growth from 18q4 to 19q1?
+gen growth_l1_cat = 1 if growth_l1 < -0.20 & n == 1
+replace growth_l1_cat = 2 if growth_l1 >= -0.20 & growth_l1 <= 0.20 & n == 1
+replace growth_l1_cat = 3 if growth_l1 > 0.20 & n == 1
+
+* 7. growth from 18q1 to 19q1
+gen dhs_q_cat = 0 if dhs_q < -0.20 & dhs_q != .
+replace dhs_q_cat = 1 if dhs_q >= -0.20 & dhs_q <= 0.20 & dhs_q != .
+replace dhs_q_cat = 2 if dhs_q > 0.20 & dhs_q != .
