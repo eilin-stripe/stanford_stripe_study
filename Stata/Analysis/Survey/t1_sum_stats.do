@@ -51,11 +51,13 @@ label values female_int female_l2
 
 ////	firm type by gender (t1_f1)
 *catplot strata_int female if n == 1, percent(female)stack asyvars bar(1, bcolor(teal*0.8)) bar(2, bcolor(orange*0.7)) bar(3, bcolor(gs6)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) legend(label(1 "Funded") label(2 "Large") label(3 "Small"))
+replace KeyLifeChangingMoney = 0 if KeyLifeChangingMoney == -777 & !missing(KeyLifeChangingMoney)
+collapse (mean)KeyLifeChangingMoney KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther
 
 
 ////	reason by gender
-replace KeyLifeChangingMoney = 0 if KeyLifeChangingMoney == -777 & !missing(KeyBeBossename)
-replace KeyLifeChangingMoney = . if KeyLifeChangingMoney == -777 & missing(KeyBeBossename)
+replace KeyLifeChangingMoney = 0 if KeyLifeChangingMoney == -777 & !missing(KeyLifeChangingMoney)
+replace KeyLifeChangingMoney = . if KeyLifeChangingMoney == -777 & missing(KeyLifeChangingMoney)
 collapse (mean)KeyLifeChangingMoney KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther, by (female)
 foreach var of varlist KeyBeBossename KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther{
 replace `var' = `var'[2] - `var'[1] if female == .

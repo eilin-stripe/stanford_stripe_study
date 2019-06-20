@@ -127,6 +127,15 @@ replace predict_cat = 3 if actual3months == 0 & Predict3Months == 0 & Good3Month
 
 
 // WHAT EXPLAINS PREDICTION
+* 8. variance in trans count?
+merge m:1 merchant_id using "`clean_dir'/trans_count.dta"
+replace trans_count = . if n != 1
+replace trans_annual = . if n != 1
+replace trans_count = 0 if _merge == 1  & n==1
+replace trans_annual = 0 if _merge == 1  & n==1
+gen trans_mean = 1 if trans_annual > 75 & n==1
+replace trans_mean = 0 if trans_annual <= 75 & n==1
+
 
 * 1. firm type? smaller firms seem to over-predict
 gen strata_int = 0 if strata == "funded"
@@ -156,11 +165,13 @@ replace intll_rev_share = 0 if PercRevInternational <= 8.7 & n == 1
 catplot predict_cat intll_rev_share, percent(intll_rev_share)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
 * 6. growth from 18q4 to 19q1?
-gen growth_l1_cat = 1 if growth_l1 < -0.20 & n == 1
-replace growth_l1_cat = 2 if growth_l1 >= -0.20 & growth_l1 <= 0.20 & n == 1
-replace growth_l1_cat = 3 if growth_l1 > 0.20 & n == 1
+gen dhs_l1 = (npv_19q1 - npv_18q4)/(0.5* (npv_19q1 + npv_18q4))
+gen dhs_l1_cat = 0 if dhs_l1 < 0 & n == 1
+replace dhs_l1_cat = 1 if dhs_l1 >= 0 & n == 1
 
 * 7. growth from 18q1 to 19q1
-gen dhs_q_cat = 0 if dhs_q < -0.20 & dhs_q != .
-replace dhs_q_cat = 1 if dhs_q >= -0.20 & dhs_q <= 0.20 & dhs_q != .
-replace dhs_q_cat = 2 if dhs_q > 0.20 & dhs_q != .
+gen dhs_q_cat = 0 if dhs_q < 0 & n == 1
+replace dhs_q_cat = 1 if dhs_q > 0 & n == 1
+
+
+
