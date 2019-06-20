@@ -75,14 +75,19 @@ local mar19 = date("2019-03-01", "YMD")
 local apr19 = date("2019-04-01", "YMD")
 local may19 = date("2019-05-01", "YMD")
 
-* npv_18q1
-bysort merchant (timestamp_m): gen npv_18q1 = sum(npv_monthly) if (ndate >= `j18' & ndate <= `m18')
-bysort merchant (timestamp_m): replace npv_18q1 = npv_18q1[_n - 1] if missing(npv_18q1)
-bysort merchant (timestamp_m): replace npv_18q1 = npv_18q1[_N] if _n == 1
-bysort merchant (timestamp_m): replace npv_18q1 = . if _n != 1
+* npv_18q*
+bysort merchant (timestamp_m): gen npv_18q1 = sum(npv_monthly) if (ndate >= `jan18' & ndate <= `mar18')
+bysort merchant (timestamp_m): gen npv_18q2 = sum(npv_monthly) if (ndate >= `apr18' & ndate <= `jun18')
+bysort merchant (timestamp_m): gen npv_18q3 = sum(npv_monthly) if (ndate >= `jul18' & ndate <= `sep18')
+bysort merchant (timestamp_m): gen npv_18q4 = sum(npv_monthly) if (ndate >= `oct18' & ndate <= `dec18')
+foreach num of numlist 1/4{
+bysort merchant (timestamp_m): replace npv_18q`num' = npv_18q`num'[_n - 1] if missing(npv_18q`num')
+bysort merchant (timestamp_m): replace npv_18q`num' = npv_18q`num'[_N] if _n == 1
+bysort merchant (timestamp_m): replace npv_18q`num' = . if _n != 1
+}
 
 * npv_19q1
-bysort merchant (timestamp_m): gen npv_19q1 = sum(npv_monthly) if (ndate >= `j19' & ndate <= `m19')
+bysort merchant (timestamp_m): gen npv_19q1 = sum(npv_monthly) if (ndate >= `jan19' & ndate <= `mar19')
 bysort merchant (timestamp_m): replace npv_19q1 = npv_19q1[_n - 1] if missing(npv_19q1)
 bysort merchant (timestamp_m): replace npv_19q1 = npv_19q1[_N] if _n == 1
 bysort merchant (timestamp_m): replace npv_19q1 = . if _n != 1
@@ -96,16 +101,6 @@ label variable dhs_q "First quarter growth rate"
 
 replace dhs_q = 0 if npv_18q1 == 0 & npv_19q1 == 0	//replace dhs_q = 0 for firms that had 0 npv in q1 of both years
 drop num den
-
-//// average mom 2018
-bysort merchant (timestamp_m): gen  num = npv_monthly - npv_monthly[_n - 1] if year == 2018
-bysort merchant (timestamp_m): gen  den = 0.5 * (npv_monthly + npv_monthly[_n - 1]) if year == 2018
-gen dhs_18 = num/den
-label variable dhs_18 "MoM growth rate (2018)"
-
-bysort merchant (timestamp_m): egen dhs_18_mean = mean(dhs_18)
-bysort merchant (timestamp_m): replace dhs_18_mean = . if _n != 1
-label variable dhs_18_mean "Mean growth 2018"
 
 
 save "`clean_dir'/round1_dp.dta", replace

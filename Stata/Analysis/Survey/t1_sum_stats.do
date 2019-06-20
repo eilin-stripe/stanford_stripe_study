@@ -91,7 +91,7 @@ gen edu_recode = 1 if Education == 2
 replace edu_recode = 2 if Education == 4
 replace edu_recode = 3 if Education == 1
 replace edu_recode = 4 if Education == 6
-replace edu_recode = 4 if Education == 3
+replace edu_recode = 5 if Education == 3
 replace edu_recode = 6 if Education == 5
 label define edu_l 1 "< High School" 2 "High School" 3 "2-Year Degree" 4 "Some College" 5 "Bachelors" 6 "Masters+"
 label values edu_recode edu_l

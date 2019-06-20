@@ -157,13 +157,4 @@ catplot dhs_m_cat DaysToComplete2 if strata =="funded", percent(DaysToComplete2)
 catplot dhs_m_cat DaysToComplete2 if strata =="big", percent(DaysToComplete2)stack asyvars bar(1, bcolor(64 0 64)) bar(2, bcolor(99 3 6)) bar(3, bcolor(33 66 0)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 catplot dhs_m_cat DaysToComplete2 if strata =="small", percent(DaysToComplete2)stack asyvars bar(1, bcolor(64 0 64)) bar(2, bcolor(99 3 6)) bar(3, bcolor(33 66 0)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
-// prediction categories
-foreach var of varlist Predict3Months Bad3Months Good3Months{
-	replace `var' = `var' * 1000
-}
 
-gen predict_cat = 1 if actual3months <= Bad3Months & actual3months != .
-replace predict_cat = 2 if actual3months > Bad3Months & actual3months <= 0.9*Predict3Months & n == 1 & actual3months != .
-replace predict_cat = 3 if actual3months >= 0.9*Predict3Months & actual3months <= 1.1*Predict3Months & n == 1 & actual3months != .
-replace predict_cat = 4 if actual3months >= 1.1*Predict3Months & n == 1 & actual3months != .
-replace predict_cat = 5 if actual3months >= Good3Months & n == 1 & actual3months != .
