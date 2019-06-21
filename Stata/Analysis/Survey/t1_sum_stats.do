@@ -9,11 +9,12 @@
 ********************************************************************************
 
 cd "~/Documents/SIE"
-local raw_dir "01_raw_data/"
-local clean_dir "sta_files/"
+local raw_dir "01_raw_data"
+local clean_dir "sta_files"
 local tables "07_Output/"
 
-use "`clean_dir'round1.dta", clear
+
+use "`clean_dir'/round1.dta", clear
 
 ////	keep finished surveys & strata
 drop if Finished == 1
@@ -21,6 +22,15 @@ gen strata_int = 0 if strata == "funded"
 replace strata_int = 1 if strata == "big"
 replace strata_int = 2 if strata =="small"
 
+// enter strata for round 1.1 and 1.2
+replace strata = "funded" if label__is_funded == "true"
+drop label__is_funded label__is_funded_by_tier1_vc
+
+drop _merge
+merge 1:m merchant_id using "`clean_dir'/round1_dp.dta"
+egen npv_18 = rowtotal(npv_18q1 npv_18q2 npv_18q3 npv_18q4)
+replace strata = "big" if strata == "" & npv_18 >= 10000
+replace strata = "small" if strata == "" & npv_18 < 10000
 
 /*///	time for redshift data
 rename month timestamp
@@ -140,5 +150,5 @@ label values startupfunds supfunds_l
 catplot startupfunds female_int if n == 1, percent(female_int)stack asyvars bar(1, bcolor(emidblue*1)) bar(2, bcolor(teal*0.8)) bar(3, bcolor(erose*0.6)) bar(4, bcolor(lavender*0.4)) bar(5, bcolor(red*0.2)) bar(6, bcolor(orange*0.2))graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
 * growth from 17q1 to 18q1
-gen dhs_q1_l = 
+
 	

@@ -25,7 +25,6 @@ local clean_dir "sta_files"
 */
 
 // read data
-
 use "`clean_dir'/round1_dp.dta", clear
 
 ** merge survey data
@@ -40,6 +39,15 @@ bysort merchant_id: gen n = 1 if _n == 1
 foreach var of varlist Predict3Months Bad3Months Good3Months{
 	replace `var' = `var' * 1000
 }
+
+// enter strata for round 1.1 and 1.2
+egen npv_18 = rowtotal(npv_18q1 npv_18q2 npv_18q3 npv_18q4)
+replace strata = "big" if strata == "" & npv_18 >= 10000
+replace strata = "small" if strata == "" & npv_18 < 10000
+drop npv_18
+merge m:1 merchant_id using "`clean_dir'/earlyr1_strata.dta"
+replace strata = "funded" if label__is_funded == "true"
+drop label__is_funded label__is_funded_by_tier1_vc
 
 
 ** for january 2019 survey completion
