@@ -139,5 +139,6 @@ label values startupfunds supfunds_l
 *t1-f9
 catplot startupfunds female_int if n == 1, percent(female_int)stack asyvars bar(1, bcolor(emidblue*1)) bar(2, bcolor(teal*0.8)) bar(3, bcolor(erose*0.6)) bar(4, bcolor(lavender*0.4)) bar(5, bcolor(red*0.2)) bar(6, bcolor(orange*0.2))graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
-
+* growth from 17q1 to 18q1
+gen dhs_q1_l = 
 	

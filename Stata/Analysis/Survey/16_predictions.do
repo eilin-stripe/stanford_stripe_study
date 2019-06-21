@@ -173,5 +173,13 @@ replace dhs_l1_cat = 1 if dhs_l1 >= 0 & n == 1
 gen dhs_q_cat = 0 if dhs_q < 0 & n == 1
 replace dhs_q_cat = 1 if dhs_q > 0 & n == 1
 
+* 8. firm age
+gen firm_age = 2019 - FirstCostYear if n == 1
+label variable firm_age "Firm age"
+gen firm_age2 = firm_age * firm_age
 
+* 9. growth from 18q3 to 18q4?
+gen dhs_q1_1718_cat = 0 if dhs_q1_1718 =< 0 & !missing(dhs_q1_1718)
+replace dhs_q1_1718_cat = 1 if dhs_q1_1718 > 0 & !missing(dhs_q1_1718)
+catplot predict_cat dhs_q1_1718_cat, percent(dhs_q1_1718_cat)stack asyvars  bar(1, bcolor(64 168 205)) bar(2, bcolor(0 139 188)) bar(3, bcolor(0 111 150)) bar(4, bcolor(07 100 200 )) bar(5, bcolor(02 0 102)) graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
 
