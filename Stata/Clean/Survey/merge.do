@@ -799,6 +799,8 @@ drop if merchant_id=="acct_1AxEr8DOZUCvjAiM" & FinishedTemp == "False"
 drop n
 
 // SAVE FILE
+gen finished = 0 if Finished == 1 | Finished==2
+replace finished=1 if Finished==3 | Finished==4
 save "`clean_dir'round1", replace
 
 /// Indicator for strata
