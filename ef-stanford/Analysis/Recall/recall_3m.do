@@ -1,10 +1,8 @@
 ******************************************************************************
-				*** Growth rate forecasts ***
+				*** Recall ***
 ******************************************************************************	
 
-* 3-month forecasts
-* reads round 1 data, merges with Stripe npv data, bin scatter of 
-* expected and actual 3 month growth
+* compares actual to recall 3-month npv
 
 ******************************************************************************	
 * setup
@@ -92,35 +90,3 @@ local apr5=date("2018-05-01", "YMD")
 local apr6=date("2018-06-01", "YMD")
 bysort merchant_id(year month): replace actual3m_2019= sum(npv_monthly) if enddate>`mar' & enddate<=`apr' & (ndate==`apr1' | ndate==`apr2' | ndate==`apr3')
 bysort merchant_id (year month): replace actual3m_2018 = sum(npv_monthly) if enddate>`mar' & enddate<=`apr'  & (ndate == `apr4' | ndate == `apr5' | ndate == `apr6')
-
-
-bysort merchant_id (year month): gen actual3m_temp = actual3m_2019 if !missing(actual3m_2019)
-bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_n - 1] if missing(actual3m_2019) & _n > 1
-bysort merchant_id (year month): replace actual3m_temp = actual3m_temp[_N]
-bysort merchant_id (year month): replace actual3m_2019 = actual3m_temp 
-
-bysort merchant_id (year month): gen actual3m_2018_temp = actual3m_2018 if !missing(actual3m_2018)
-bysort merchant_id (year month): replace actual3m_2018_temp = actual3m_2018_temp[_n - 1] if missing(actual3m_2018) & _n > 1
-bysort merchant_id (year month): replace actual3m_2018_temp = actual3m_2018_temp[_N]
-bysort merchant_id (year month): replace actual3m_2018 = actual3m_2018_temp 
-
-drop actual3m_temp actual3m_2018_temp
-
-* retain one obs per merchant
-bysort merchant_id(year month): replace actual3m_2019*=. if _n!=1
-bysort merchant_id(year month): replace actual3m_2018*=. if _n!=1
-
-gen growth_3m_actual=(actual3m_2019-actual3m_2018)/(0.5*(actual3m_2019+ actual3m_2018))
-winsor2 growth_3m_actual, suffix(_w) cuts(10 90)
-
-
-// predicted growth rate
-gen growth_3m_predict=(Predict3Months-actual3m_2018)/(0.5*(Predict3Months+actual3m_2018))
-winsor2 growth_3m_predict, suffix(_w) cuts(10 90)
-
-
-
-** binscatter of actual v predicted dollar amount npv
-
-// catch manual entry errors
-gen ratio =Predict3Months/actual3m_2019
