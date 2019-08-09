@@ -63,7 +63,7 @@ replace Firms = Firms / totalfirms
 tempfile ase
 save "`ase'"
 
-*use "`prediction_check'"
+/*use "`prediction_check'"
 use "/Users/eilin/Documents/SIE/sta_files/round1.dta"
 
 *keep if Finished == 1
@@ -71,10 +71,37 @@ keep if Finished == 2
 // online-focused businesses
 *keep if PercRevOnline >= 50
 
-* weights
-gen weight = 0.124 if strata == "funded"
-replace weight = 1.831 if strata == "big"
-replace weight = 1.236 if strata == "small"
+gen Firmssurvey = 1
+drop if Age == .
+collapse (sum) Firmssurvey[w = weight] , by(Age)
+*collapse (sum) Firmssurvey, by(Age)
+
+egen totalfirmssurvey = total(Firmssurvey)
+replace Firmssurvey = Firmssurvey / totalfirms
+
+merge 1:1  Age using "`ase'"
+replace Firmssurvey = - Firmssurvey
+
+twoway (bar Firms Age , horizontal) || ///
+    (bar Firmssurvey Age, horizontal) , ///
+    scheme(pretty1) ylabel( 0(1)5, valuelabel) ///
+    xlabel(-.4 ".4" -.2 ".2" 0 "0" .2 .4) ///
+    legend(order(2 "Survey" 1 "ASE")  region(lwidth(none))) ///
+    ytitle("Age")
+graph rename OwnerAgeComparison, replace
+graph export "`outdir'/OwnerAgeComparison.eps", replace
+
+/*
+replace Firmssurvey = - Firmssurvey
+graph bar Firms Firmssurvey, over(Age, label(angle(45))) ///
+    scheme(pretty1) legend(order(2 "Survey" 1 "BDS")  region(lwidth(none)))
+*/
+*/
+
+
+
+// read in combined r1 and r2 data
+use "/Users/eilin/Documents/SIE/sta_files/Combined.dta", clear
 
 rename Age AgeTemp
 gen Age = .
@@ -90,31 +117,29 @@ label define Age 0 "< 25" 1 "25 to 34" 2 "35 to 44" 3 "45 to 54" ///
 
 label values Age Age
 
-gen Firmssurvey = 1
-drop if Age == .
-collapse (sum) Firmssurvey[w = weight] , by(Age)
-*collapse (sum) Firmssurvey, by(Age)
+// re-weight to represent Stripe
+gen strata_int=0 if Strata==2 & !missing(Progress)
+replace strata_int=1 if Strata==1 & !missing(Progress)
+replace strata_int=2 if Strata==0 & !missing(Progress)
 
-egen totalfirmssurvey = total(Firmssurvey)
-replace Firmssurvey = Firmssurvey / totalfirms
+gen strata_wt=0.126 if strata_int==0
+replace strata_wt=1.449 if strata_int==1
+replace strata_wt=1.253 if strata_int==2
 
-merge 1:1  Age using "`ase'"
-replace Firmssurvey = - Firmssurvey
+keep Age strata_int strata_wt
+bysort Age: gen stripe_firm_count_eq=sum(strata_wt)
+bysort Age: replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+collapse stripe_firm_count_eq, by (Age)
+drop if Age==.
 
-twoway (bar Firmssurvey Age, fcolor(purple) lcolor(white) lwidth(medium) horizontal barwidth(1)) (bar Firms Age, fcolor(dknavy) lcolor(white) ////
-	lwidth(medium) horizontal barwidth(1)), ylabel(, labels angle(horizontal) valuelabel) 
-	
-twoway (bar Firms Age , horizontal) || ///
-    (bar Firmssurvey Age, horizontal) , ///
-    scheme(pretty1) ylabel( 0(1)5, valuelabel) ///
-    xlabel(-.4 ".4" -.2 ".2" 0 "0" .2 .4) ///
-    legend(order(2 "Survey" 1 "ASE")  region(lwidth(none))) ///
-    ytitle("Age")
-graph rename OwnerAgeComparison, replace
-graph export "`outdir'/OwnerAgeComparison.eps", replace
+** ratio of firms by age
+egen s_ratio=total(stripe_firm_count_eq)
+replace s_ratio= stripe_firm_count_eq/s_ratio
 
-/*
-replace Firmssurvey = - Firmssurvey
-graph bar Firms Firmssurvey, over(Age, label(angle(45))) ///
-    scheme(pretty1) legend(order(2 "Survey" 1 "BDS")  region(lwidth(none)))
-*/
+// merge data
+merge 1:1 Age using `ase'
+replace Firms=-Firms
+
+graph hbar Firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(Age, label(labsize(small))) bargap(-100) ///
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+
