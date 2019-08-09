@@ -2,7 +2,7 @@
 				*** Geographical distribution ***
 ******************************************************************************	
 
-* identifies respondent locations
+* identifies respondent regions
 
 ******************************************************************************	
 * setup
@@ -100,5 +100,10 @@ replace ratio= firms_region/ratio
 merge 1:1 region using `y'
 replace ratio = -ratio
 
-graph hbar ratio s_ratio, bar(1, fcolor("99 48 179")) bar(2, fcolor("145 64 137")) over(region) bargap(-100)  graphregion(fcolor(white) ///
-	ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+label define regionl 1 "Northeast" 2 "Midwest" 3 "South" 4 "West"
+label values region regionl
+
+graph hbar ratio s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(region, label(labsize(small))) ///
+	bargap(-100) ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+	
+

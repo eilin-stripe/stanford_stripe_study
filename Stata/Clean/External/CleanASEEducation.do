@@ -69,8 +69,7 @@ replace Firms = Firms / totalfirms
 tempfile ase
 save "`ase'"
 
-*use "`prediction_check'"
-use "/Users/eilin/Documents/SIE/sta_files/round1.dta"
+/*use "`prediction_check'"
 
 *keep if Finished == 1
 keep if Finished == 2
@@ -119,3 +118,33 @@ replace Firmssurvey = - Firmssurvey
 graph bar Firms Firmssurvey, over(Age, label(angle(45))) ///
     scheme(pretty1) legend(order(2 "Survey" 1 "BDS")  region(lwidth(none)))
 */
+*/
+
+// read in combined r1 and r2 data
+use "/Users/eilin/Documents/SIE/sta_files/Combined.dta", clear
+
+// re-weight to represent Stripe
+gen strata_int=0 if Strata==2 & !missing(Progress)
+replace strata_int=1 if Strata==1 & !missing(Progress)
+replace strata_int=2 if Strata==0 & !missing(Progress)
+
+gen strata_wt=0.126 if strata_int==0
+replace strata_wt=1.449 if strata_int==1
+replace strata_wt=1.253 if strata_int==2
+
+keep Education strata_int strata_wt
+bysort Education: gen stripe_firm_count_eq=sum(strata_wt)
+bysort Education: replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+collapse stripe_firm_count_eq, by (Education)
+drop if Education==.
+
+** ratio of firms by age
+egen s_ratio=total(stripe_firm_count_eq)
+replace s_ratio= stripe_firm_count_eq/s_ratio
+
+// merge data
+merge 1:1 Education using `ase'
+replace Firms=-Firms
+
+graph hbar Firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(Education, label(labsize(small))) bargap(-100) ///
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))

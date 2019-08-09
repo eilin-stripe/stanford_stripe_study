@@ -56,11 +56,33 @@ save `ase'
 // read in combined r1 and r2 data
 use "/Users/eilin/Documents/SIE/sta_files/Combined.dta", clear
 
-collapse (count) Progress, by (Female)
-drop if Female>1
-rename Progress s_firms
+rename Female female
 
+// re-weight to represent Stripe
+gen strata_int=0 if Strata==2 & !missing(Progress)
+replace strata_int=1 if Strata==1 & !missing(Progress)
+replace strata_int=2 if Strata==0 & !missing(Progress)
+
+gen strata_wt=0.126 if strata_int==0
+replace strata_wt=1.449 if strata_int==1
+replace strata_wt=1.253 if strata_int==2
+
+keep female strata_int strata_wt
+bysort female: gen stripe_firm_count_eq=sum(strata_wt)
+bysort female: replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+collapse stripe_firm_count_eq, by (female)
+drop if female>1
+
+** ratio of firms by gender
+egen s_ratio=total(stripe_firm_count_eq)
+replace s_ratio= stripe_firm_count_eq/s_ratio
 
 
 // merge data
-merge 1:1 Female using `ase'
+merge 1:1 female using `ase'
+replace us_ratio =-us_ratio
+
+graph hbar us_ratio s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(female, label(labsize(small))) bargap(-100) ///
+	ylabel(-.75 (0.25) 0.75) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+
+
