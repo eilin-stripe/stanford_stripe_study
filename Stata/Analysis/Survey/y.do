@@ -21,7 +21,8 @@ local clean_dir "sta_files"
 local output_dir "07_Output"
 
 // read data
-import delimited "`raw_dir'/r1_npv.csv", encoding(ISO-8859-1)clear
+import delimited "`raw_dir'/06_dash_views.csv", encoding(ISO-8859-1)clear
+*import delimited "/Users/eilin/Documents/SIE/01_raw_data/06_dash_views.csv", encoding(ISO-8859-1)clear
 
 merge m:1 merchant_id using "/Users/eilin/Documents/SIE/sta_files/round1.dta"
 
@@ -55,11 +56,11 @@ label values edu_recode edu_l
 gen college=1 if edu_recode>=5 & !missing(edu_recode)
 replace college=0 if edu_recode<5 & !missing(edu_recode)
 
-// merge zip to rural data
+/*/ merge zip to rural data
 cap drop _merge
 merge m:1 ZipCode using "/Users/eilin/Documents/SIE/sta_files/ziptorural.dta"
 keep if _merge==3
-drop _merge
+drop _merge*/
 
 // Number of employees
 gen employee=NumEmployees
@@ -160,14 +161,15 @@ replace predict_cat = 5 if actual3m >= Good3Months & (actual3m != . & Predict3Mo
 gen predict_accurate=1 if predict_cat==3
 replace predict_accurate=0 if predict_cat!=3 & !missing(predict_cat)
 
+
 // dashboard views
 bysort merchant (ndate): gen dash_total=sum(dash_views_monthly) if ndate>=date("2017-12-31", "YMD")& ndate<=date("2018-12-31", "YMD")
 bysort merchant (ndate): replace dash_total= dash_total[_n-1] if dash_total==.
 bysort merchant (ndate): replace dash_total= dash_total[_N] 
 bysort merchant (ndate): replace dash_total=. if _n!=1
 
-gen dash_mean=1 if dash_total>=113 & !missing(dash_total) 
-replace dash_mean=0 if dash_total<113 & !missing(dash_total)
+gen dash_mean=1 if dash_total>=105 & !missing(dash_total) 
+replace dash_mean=0 if dash_total<105 & !missing(dash_total)
 
 
 // strata
@@ -283,15 +285,6 @@ replace growth_negative=0 if prev_q_growth>0 & !missing(prev_q_growth)
 gen predict_over=1 if predict_cat==1 | predict_cat==2
 replace predict_over=0 if predict_cat==3 | predict_cat==4 | predict_cat==5
 
-/*
-reg predict_over i.growth_negative##i.strata_int, robust
-outreg2 using "`output_dir'/y2.tex", replace
-
-reg predict_over i.growth_negative##i.strata_int i.growth_negative##i.dash_mean, robust
-outreg2 using "`output_dir'/y2.tex", append
-
-reg predict_over i.growth_negative##i.strata_int i.growth_negative##i.dash_mean single_founder startupfunds100k PercRevInternational PercRevOnline employee coding college , robust
-outreg2 using "`output_dir'/y2.tex", append
 
 // strata
 catplot predict_cat strata_int, percent(strata_int)stack asyvars bar(1, bcolor(31 10 115*1)) bar(2, bcolor(67 36 191)) bar(3, bcolor(10 100 115)) bar(4, bcolor(36 169 191)) bar(5, bcolor(176 235 245))graphregion(fcolor(white) ifcolor(white)) plotregion(fcolor(white) ifcolor(white)) title (, color(black)) 
@@ -323,8 +316,15 @@ catplot predict_cat prev_biz_indicator if n==1, percent(prev_biz_indicator)stack
 gen firm_age=2019-FirstCostYear
 
 
-// dhs growth histogram
 
+reg predict_over i.growth_negative##i.strata_int, robust
+outreg2 using "`output_dir'/y2.tex", replace
+
+reg predict_over i.growth_negative##i.strata_int i.growth_negative##i.dash_mean, robust
+outreg2 using "`output_dir'/y2.tex", append
+
+reg predict_over i.growth_negative##i.strata_int i.growth_negative##i.dash_mean single_founder Age coding college female startupfunds100k PercRevInternational PercRevOnline employee  firm_age prev_biz_indicator NumBusOwned, robust
+outreg2 using "`output_dir'/y2.tex", append
 
 
 
