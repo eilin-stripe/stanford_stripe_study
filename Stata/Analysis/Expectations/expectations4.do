@@ -46,7 +46,7 @@ gen ndate = mdy(month, day, year)
 gen enddate = date(EndDateTemp,"YMD")
 
 
-// actual growth rate
+// 3 months NPV in 2018 and 2019
 
 ** january 2019 survey completion
 local j = date("2019-01-31", "YMD")
@@ -60,6 +60,9 @@ loca j3 = date("2019-03-01", "YMD")
 local j4 = date("2018-01-01", "YMD")
 local j5 = date("2018-02-01", "YMD")
 loca j6 = date("2018-03-01", "YMD")
+local j7 = date("2017-01-01", "YMD")
+local j8 = date("2017-02-01", "YMD")
+local j9 = date("2017-03-01", "YMD")
 bysort merchant_id (year month): gen actual3m_2019 = sum(npv_monthly) if enddate <= `j' & (ndate == `j1' | ndate == `j2' | ndate == `j3')
 bysort merchant_id (year month): gen actual3m_2018 = sum(npv_monthly) if enddate <= `j' & (ndate == `j4' | ndate == `j5' | ndate == `j6')
 
@@ -119,8 +122,11 @@ gen growth_3m_predict=(Predict3Months-actual3m_2018)/(0.5*(Predict3Months+actual
 winsor2 growth_3m_predict, suffix(_w) cuts(10 90)
 
 
-
 ** binscatter of actual v predicted dollar amount npv
+gen ln_predict3m = ln(Predict3Months) if !missing(actual3m_2019)
+gen ln_actual3m = ln(actual3m_2019)
 
 // catch manual entry errors
 gen ratio =Predict3Months/actual3m_2019
+
+binscatter ln_predict3m ln_actual3m ln_actual3m if ratio < 1000, mcolors(navy) msymbol(O i) lcolors(white red)

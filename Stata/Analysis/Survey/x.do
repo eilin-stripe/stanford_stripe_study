@@ -116,11 +116,11 @@ label values edu_recode edu_l
 gen college=1 if edu_recode>=5 & !missing(edu_recode)
 replace college=0 if edu_recode<5 & !missing(edu_recode)
 
-// merge zip to rural data
+/*/ merge zip to rural data
 cap drop _merge
 merge m:1 ZipCode using "/Users/eilin/Documents/SIE/sta_files/ziptorural.dta"
 keep if _merge==3
-drop _merge
+drop _merge */
 
 // Number of employees
 gen employee=NumEmployees
@@ -138,9 +138,22 @@ replace single_founder=0 if NumFounders!=1
 gen stem=1 if DegreeSTEM==1
 replace stem=0 if DegreeSTEM==0
 
+// re-weight to represent Stripe
+gen strata_wt=0.126 if strata_int==0
+replace strata_wt=1.449 if strata_int==1
+replace strata_wt=1.253 if strata_int==2
+
+
 // histogram
 winsor2 dhs_h1, suffix(_w) cuts(10 90) 
-histogram dhs_h1_w, fraction fcolor(dkgreen) lcolor(white) xtitle(Growth rates (2019h1)) graphregion(fcolor(white) lcolor(white))
+*histogram dhs_h1_w, fraction fcolor(dkgreen) lcolor(white) xtitle(Growth rates (2019h1)) graphregion(fcolor(white) lcolor(white))
+histogram dhs_h1 if dhs_h1<2, fraction fcolor(dkgreen) lcolor(white) xtitle(Growth rates (2019h1)) graphregion(fcolor(white) lcolor(white))
+
+// growth by percent revenue online
+replace PercRevOnline=100 if PercRevOnline>100 & !missing(PercRevOnline)
+gen rev_online_high=1 if PercRevOnline >= 70 & !missing(PercRevOnline)
+replace rev_online_high=0 if  PercRevOnline < 70 & !missing(PercRevOnline)
+twoway (histogram dhs_h1_w, fraction fcolor(dkgreen) lcolor(white)), ytitle("Fraction", size(small)) xtitle("Forecasted annual growth", size(small))  by(, graphregion(fcolor(white) ifcolor(white))) by(rev_online_high) subtitle(, size(small) color(black) nobox)
 
 *******************************************************************************
 ** Regressions

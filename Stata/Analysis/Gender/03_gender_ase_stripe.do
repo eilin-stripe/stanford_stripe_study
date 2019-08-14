@@ -1,7 +1,8 @@
 *******************************************************************************
 ** 
 ** Gender from ASE and Stripe founders gender
-**
+** reads ASE data, combines summary stats for non-employer businesses and 
+*** compares to re-weighted survey data
 *******************************************************************************
 
 
@@ -44,6 +45,12 @@ destring us_firms, replace
 
 collapse (sum) us_firms, by(female)
 
+
+// total non-employer business in 2016=24,813,048 (https://www.census.gov/newsroom/press-releases/2019/nonemployer-businesses.html)
+// share of women in non-employer business in 2015 =40% (https://www.sba.gov/sites/default/files/advocacy/Nonemployer-Fact-Sheet.pdf)
+gen us_nes=0.4*24813048 if female==1
+replace us_nes=0.6*24813048 if female==0
+
 ** ratio of firms by gender
 egen us_ratio=total(us_firms)
 replace us_ratio=us_firms/us_ratio
@@ -57,6 +64,9 @@ save `ase'
 use "/Users/eilin/Documents/SIE/sta_files/Combined.dta", clear
 
 rename Female female
+su PercRevOnline, de
+gen high_rev_online=1 if PercRevOnline>=80 & !missing(PercRevOnline)
+replace high_rev_online=0 if PercRevOnline<80
 
 // re-weight to represent Stripe
 gen strata_int=0 if Strata==2 & !missing(Progress)
