@@ -1,7 +1,7 @@
 *******************************************************************************
 ** 
 ** Gender from ASE and Stripe founders gender
-** reads ASE data, combines summary stats for non-employer businesses and 
+** reads ASE 2016 data, combines summary stats for non-employer businesses and 
 *** compares to re-weighted survey data
 *******************************************************************************
 
@@ -90,8 +90,11 @@ replace s_ratio= stripe_firm_count_eq/s_ratio
 
 // merge data
 merge 1:1 female using `ase'
-replace us_ratio =-us_ratio
 
+graph hbar us_ratio s_ratio,  bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(female) graphregion(fcolor(white) ifcolor(white)) ///
+	legend(label(1 "All US firms") label(2 "Stripe firms"))
+
+/* replace us_ratio =-us_ratio
 graph hbar us_ratio s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(female, label(labsize(small))) bargap(-100) ///
 	ylabel(-.75 (0.25) 0.75) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
 
