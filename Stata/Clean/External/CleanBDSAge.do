@@ -32,10 +32,22 @@ import delimited "`in'", encoding(ISO-8859-1)clear
 replace fage4 = regexr(fage4, "^[a-z]\) ", "")
 replace fage4 = "26 to 40" if fage4 == "26+"
 replace fage4 = "41+" if fage == "Left Censored"
-label define BusAge 0 "0" 1 "1" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6 to 10" ///
-    7 "11 to 15" 8 "16 to 20" 9 "21 to 25" 10 "26 to 40" 11 "41+"
 
-encode fage4, gen(FirmAge2) label(BusAge)
+gen FirmAge2=1 if fage4=="0" | fage4=="1"
+replace FirmAge2=2 if fage4=="2" | fage4=="3"| fage4=="4" | fage4=="5"
+replace FirmAge2=3 if fage4=="6 to 10"
+replace FirmAge2=4 if fage4=="11 to 15"
+replace FirmAge2=5 if fage4=="16 to 20"
+replace FirmAge2=6 if fage4=="21 to 25"
+replace FirmAge2=7 if fage4=="26 to 40"
+replace FirmAge2=8 if fage4=="41+"
+
+label define BusAge 1 "0 to 1" 2 "2 to 5" 3 "6 to 10" ///
+    4 "11 to 15" 5 "16 to 20" 6 "21 to 25" 7 "26 to 40" 8 "41+"
+label values FirmAge2 BusAge
+	
+collapse firms, by (FirmAge2)
+
 
 /*
 twoway bar firms FirmAge2 , base(0) scheme(pretty1) xtitle("Firm Age") ///
@@ -44,7 +56,6 @@ twoway bar firms FirmAge2 , base(0) scheme(pretty1) xtitle("Firm Age") ///
 graph export "`outdir'/BDSAge.eps", replace
 */
 
-keep FirmAge2 firms
 egen totalfirms = total(firms)
 replace firms = firms / totalfirms
 
@@ -58,16 +69,15 @@ gen FirmAge = 2018 - FirstSaleYear
 replace FirmAge = -777 if FirstSaleYear == -777
 drop if FirstSaleYear == -777
 gen FirmAge2 = FirmAge
-replace FirmAge2 = 6 if inlist(FirmAge, 6, 7, 8, 9, 10)
-replace FirmAge2 = 7 if inlist(FirmAge, 11, 12, 13, 14, 15)
-replace FirmAge2 = 8 if inlist(FirmAge, 16, 17, 18, 19, 20)
-replace FirmAge2 = 9 if inlist(FirmAge, 21, 22, 23, 24, 25)
-replace FirmAge2 = 10 if FirmAge >= 26 & FirmAge <= 40
-replace FirmAge2 = 11 if FirmAge >= 41 & FirmAge != .
+replace FirmAge2 = 1 if inlist(FirmAge, 0, 1)
+replace FirmAge2 = 2 if inlist(FirmAge, 2, 3, 4, 5)
+replace FirmAge2 = 3 if inlist(FirmAge, 6, 7, 8, 9, 10)
+replace FirmAge2 = 4 if inlist(FirmAge, 11, 12, 13, 14, 15)
+replace FirmAge2 = 5 if inlist(FirmAge, 16, 17, 18, 19, 20)
+replace FirmAge2 = 6 if inlist(FirmAge, 21, 22, 23, 24, 25)
+replace FirmAge2 = 7 if FirmAge >= 26 & FirmAge <= 40
+replace FirmAge2 = 8 if FirmAge >= 41 & FirmAge != .
 replace FirmAge2 = . if FirmAge == .
-
-label define BusAge 0 "0" 1 "1" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6 to 10" ///
-    7 "11 to 15" 8 "16 to 20" 9 "21 to 25" 10 "26 to 40" 11 "41+"
 
 label values FirmAge2 BusAge
 
@@ -94,8 +104,9 @@ replace s_ratio= stripe_firm_count_eq/s_ratio
 merge 1:1 FirmAge2 using `bds'
 replace firms=-firms
 
-graph hbar firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(FirmAge2, label(labsize(small))) bargap(-100) ///
-	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+graph hbar firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(FirmAge, label(labsize(small))) bargap(-100) ///
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) ///
+	title(Firm age, size(medsmall))
 
 
 /*keep if Finished == 1

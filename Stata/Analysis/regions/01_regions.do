@@ -104,6 +104,6 @@ label define regionl 1 "Northeast" 2 "Midwest" 3 "South" 4 "West"
 label values region regionl
 
 graph hbar ratio s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(region, label(labsize(small))) ///
-	bargap(-100) ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+	bargap(-100) ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms"))  title(Region, size(medsmall))
 	
 
