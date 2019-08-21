@@ -44,18 +44,22 @@ drop yibszfi*
 
 keep educdisplaylabel ownpdemp
 
-rename educdisplaylabel EducationTemp
-replace EducationTemp = regexr(EducationTemp, "Less than high school graduate", "< High School")
-replace EducationTemp = regexr(EducationTemp, "High school graduate - diploma or GED", "High School")
-replace EducationTemp = regexr(EducationTemp, "Technical, trade, or vocational school", "2-Year Degree")
-replace EducationTemp = regexr(EducationTemp, "Some college, but no degree", "Some College")
-replace EducationTemp = regexr(EducationTemp, "Associate degree", "2-Year Degree")
-replace EducationTemp = regexr(EducationTemp, "Bachelor's degree", "Bachelors")
-replace EducationTemp = regexr(EducationTemp, "Master's, doctorate, or professional degree", "Masters+")
-drop if EducationTemp == "Total reporting"
-drop if EducationTemp == "Item not reported"
+rename educdisplaylabel EducationTemp1
+replace EducationTemp1 = regexr(EducationTemp, "Less than high school graduate", "< High School")
+replace EducationTemp1 = regexr(EducationTemp, "High school graduate - diploma or GED", "High School")
+replace EducationTemp1 = regexr(EducationTemp, "Technical, trade, or vocational school", "2-Year Degree")
+replace EducationTemp1 = regexr(EducationTemp, "Some college, but no degree", "Some College")
+replace EducationTemp1 = regexr(EducationTemp, "Associate degree", "2-Year Degree")
+replace EducationTemp1 = regexr(EducationTemp, "Bachelor's degree", "Bachelors")
+replace EducationTemp1 = regexr(EducationTemp, "Master's, doctorate, or professional degree", "Masters+")
+drop if EducationTemp1 == "Total reporting"
+drop if EducationTemp1 == "Item not reported"
 
-encode EducationTemp, gen(Education) label(Education)
+encode EducationTemp1, gen(EducationTemp) label(Education)
+gen Education=1 if EducationTemp==2 | EducationTemp==4
+replace Education=2 if EducationTemp==1 | EducationTemp==6
+replace Education=3 if EducationTemp==3
+replace Education=4 if EducationTemp==5
 drop EducationTemp
 
 rename ownpdemp Firms
@@ -132,13 +136,23 @@ gen strata_wt=0.126 if strata_int==0
 replace strata_wt=1.449 if strata_int==1
 replace strata_wt=1.253 if strata_int==2
 
-keep Education strata_int strata_wt
+gen edu_temp=1 if Education==1 | Education==2
+replace edu_temp=2 if Education==3 | Education==4
+replace edu_temp=3 if Education==5
+replace edu_temp=4 if Education==6
+
+keep edu_temp strata_int strata_wt
+rename edu_temp Education
+
+
 bysort Education: gen stripe_firm_count_eq=sum(strata_wt)
 bysort Education: replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
 collapse stripe_firm_count_eq, by (Education)
 drop if Education==.
+label define edul 1 "High School" 2 "Some College" 3 "Bachelors" 4 "Masters+"
+label values Education edul
 
-** ratio of firms by age
+** ratio of firms by edu
 egen s_ratio=total(stripe_firm_count_eq)
 replace s_ratio= stripe_firm_count_eq/s_ratio
 
@@ -147,4 +161,4 @@ merge 1:1 Education using `ase'
 replace Firms=-Firms
 
 graph hbar Firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(Education, label(labsize(small))) bargap(-100) ///
-	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) title(Education, size(medsmall))

@@ -141,5 +141,5 @@ merge 1:1 Age using `ase'
 replace Firms=-Firms
 
 graph hbar Firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(Age, label(labsize(small))) bargap(-100) ///
-	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "US firms") label(2 "Stripe firms"))
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) title(Founder age, size(medsmall))
 

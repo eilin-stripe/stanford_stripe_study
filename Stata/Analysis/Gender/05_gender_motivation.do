@@ -1,6 +1,6 @@
 *******************************************************************************
 ** 
-** Gender for blog post / public dissemination
+** Motivation to start business by gender
 **
 **
 *******************************************************************************
@@ -43,23 +43,17 @@ keep if !missing(female)
 
 * reshape long
 rename KeyBeBoss key1
-rename KeyFlexible key2
-rename KeyEarnMore key3
-rename KeyLifeChangingMoney key4
-rename KeyBestAvenue key5
-rename KeyPositive key6
-rename KeyLearning key7
-rename KeyOther key8
-
-* regressions
-reg key2 i.Strata##i.Female
-reg key6 i.Strata##i.Female
-reg key4 i.Strata##i.Female
+rename KeyBestAvenue key2
+rename KeyFlexible key3
+rename KeyPositive key4
+rename KeyEarnMore key5
+rename KeyLifeChangingMoney key6
 
 keep merchant_id female key*
-reshape long key, i(merchant_id) j(level)
 
-* histograms with ci
+reshape long key, i(merchant_id) j(level)
+drop if key==.
+
 local varname key
 local group1 level
 local group2 female
@@ -74,14 +68,12 @@ replace outcomegroup=female+6 if level==3
 replace outcomegroup=female+9 if level==4
 replace outcomegroup=female+12 if level==5
 replace outcomegroup=female+15 if level==6
-replace outcomegroup=female+18 if level==7
-replace outcomegroup=female+21 if level==8
 sort outcome
 
 * value labels
-label define keyl 0 "Own boss" 3 "Flexibility" 6 "Earn More" 9 "Life changing money" 12 "Best avenue" 15 "Positive impact" 18 "Learning" 21 "Other"
-label values outcomegroup keyl
+label define charl 0 "Own boss" 3 "Best avenue" 6 "Flexibility" 9 "Positive impact" 12 "Earn more" 15 "Life-changing money"
+label values outcome charl
 
 graph twoway (bar y outcomegroup if female, fcolor("133 155 241") lcolor(white)) (bar y outcomegroup if !female, fcolor("2 115 104") lcolor(white)) ///
-	(rcap hi lo outcomegroup), ytitle("Fraction", size(small)) xtitle(" ") xlabel(0 (3) 21, valuelabel labsize(vsmall)) graphregion(fcolor(white) /// 
-	ifcolor(white)) legend(label(1 "Female") label (2 "Male") label(3 "CI") rows(1) size(small))
+	(rcap hi lo outcomegroup), ytitle("Fraction", size(small)) xtitle(" ") xlabel(0 (3) 16, valuelabel labsize(vsmall))  ///
+	graphregion(fcolor(white) ifcolor(white)) legend(label(1 "Female") label (2 "Male") label(3 "95% CI") rows(1) size(small)) 
