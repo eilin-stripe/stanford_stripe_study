@@ -22,6 +22,21 @@ use "`raw_dir'/Combined.dta", clear
 gen female=1 if Female==1
 replace female=0 if Female==0
 
+// using weights to pool across groups
+gen strata_int=0 if Strata==2 & !missing(Progress)
+replace strata_int=1 if Strata==1 & !missing(Progress)
+replace strata_int=2 if Strata==0 & !missing(Progress)
+
+gen strata_wt=0.133 if strata_int==0
+replace strata_wt=1.447 if strata_int==1
+replace strata_wt=1.160 if strata_int==2
+
+
+// svyset
+svyset, clear
+svyset ExternalReference [pweight=strata_wt], strata(strata_int)
+
+
 // source of startup capital
 
 *replace msising capital to 0
@@ -62,11 +77,11 @@ gen start100k=1 if StartingFunding >6 & !missing(StartingFunding)
 replace start100k=0 if Starting	<=6
 
 foreach var of varlist start5k start25k start99k start100k{
-reg `var' i.female##i.Strata, robust
+svy: reg `var' i.female
 }
 
 
-* contract by gender and capital level
+/* contract by gender and capital level
 contract female start5 if !missing(female, start5)
 egen _percent = pc(_freq), by(female)
 separate _percent, by(female)
@@ -79,6 +94,50 @@ twoway bar _percent0 start50, base(0) barw(0.4) fcolor("133 155 241") lcolor(whi
 	|| bar _percent1 start51, barw(0.4) fcolor("2 115 104") lcolor(white) ytitle(Percent) ///
 	xlabel(1 "< 5k" 2 "5 - 25k" 3 "25 - 100k" 4 "> 100k", valuelabel) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "Male") ///
 	label (2 "Female") rows(1))
+*/
+	
+// do observable characteristics explain difference in funding
+
+// College
+// replace education=. if less than high school
+replace Education=. if Education==1
+gen college=1 if Education >=5 & !missing(Education)
+replace college=0 if college==. & !missing(Education)
+
+// number founders
+replace NumFounders=. if NumFounders<0
+gen cofounder=1 if NumFounders>1 & !missing(NumFounders)
+replace cofounder=0 if NumFounders==1
+
+// previous founding
+replace PreviousBusiness=. if PreviousBusiness<0
+gen prevbiz=1 if PreviousBusiness>1 & !missing(PreviousBusiness)
+replace prevbiz=0 if PreviousBusiness==0
+
+// stem degree
+replace DegreeSTEM =. if DegreeSTEM <0
+
+foreach var of varlist start5k start25k start99k start100k{
+svy: reg `var' i.female college Coding DegreeSTEM prevbiz cofounder OtherJobFlag
+}
+
+///////////// motivation
+
+*replace missing values as 0
+foreach var of varlist KeyBeBoss KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther KeyLifeChangingMoney{
+	replace `var'=0 if `var'<0
+}
+
+* fraction by gender
+*collapse (mean)KeyBeBoss KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyOther KeyLifeChangingMoney, by(female)
+
+keep if !missing(female)
 
 
+foreach var of varlist start5k start25k start99k start100k{
+svy: reg `var' KeyBeBoss KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyLifeChangingMoney
+}
 
+foreach var of varlist start5k start25k start99k start100k{
+svy: reg `var' i.female KeyBeBoss KeyFlexible KeyEarnMore KeyBestAvenue KeyPositive KeyLearning KeyLifeChangingMoney
+}
