@@ -101,7 +101,11 @@ graph bar Firms Firmssurvey, over(Age, label(angle(45))) ///
 
 
 // read in combined r1 and r2 data
-use "/Users/eilin/Documents/SIE/sta_files/Combined.dta", clear
+use "/Users/eilin/Documents/SIE/01_raw_data/Combined.dta", clear
+
+* clean
+keep if Progress==100			// keep completed surveys
+rename Female female
 
 rename Age AgeTemp
 gen Age = .
@@ -122,13 +126,13 @@ gen strata_int=0 if Strata==2 & !missing(Progress)
 replace strata_int=1 if Strata==1 & !missing(Progress)
 replace strata_int=2 if Strata==0 & !missing(Progress)
 
-gen strata_wt=0.126 if strata_int==0
-replace strata_wt=1.449 if strata_int==1
-replace strata_wt=1.253 if strata_int==2
+gen strata_wt=0.135 if strata_int==0
+replace strata_wt=1.48 if strata_int==1
+replace strata_wt=1.165 if strata_int==2
 
 keep Age strata_int strata_wt
-bysort Age: gen stripe_firm_count_eq=sum(strata_wt)
-bysort Age: replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+bysort Age (strata_int): gen stripe_firm_count_eq=sum(strata_wt)
+bysort Age (strata_int): replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
 collapse stripe_firm_count_eq, by (Age)
 drop if Age==.
 
@@ -140,6 +144,61 @@ replace s_ratio= stripe_firm_count_eq/s_ratio
 merge 1:1 Age using `ase'
 replace Firms=-Firms
 
-graph hbar Firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(Age, label(labsize(small))) bargap(-100) ///
+graph hbar Firms s_ratio, bar(1, fcolor("94 85 81")) bar(2, fcolor("62 156 143")) over(Age, label(labsize(small))) bargap(-100) ///
 	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) title(Founder age, size(medsmall))
 
+*/
+	
+/*///////////////////////////////////////////////////////////////////////////////
+
+*** Extra: Comparing ASE to employer Stripe users
+
+////////////////////////////////////////////////////////////////////////////////
+
+// read in combined r1 and r2 data
+use "/Users/eilin/Documents/SIE/01_raw_data/Combined.dta", clear
+
+* clean
+keep if Progress==100			// keep completed surveys
+rename Female female
+keep if NumEmployees > 1		// keep employer firms
+
+rename Age AgeTemp
+gen Age = .
+replace Age = 0 if AgeTemp < 25
+replace Age = 1 if AgeTemp >= 25 & AgeTemp <= 34
+replace Age = 2 if AgeTemp >= 35 & AgeTemp <= 44
+replace Age = 3 if AgeTemp >= 45 & AgeTemp <= 54
+replace Age = 4 if AgeTemp >= 55 & AgeTemp <= 64
+replace Age = 5 if AgeTemp >= 65 & AgeTemp != .
+
+label define Age 0 "< 25" 1 "25 to 34" 2 "35 to 44" 3 "45 to 54" ///
+    4 "55 to 64" 5 "65 +"
+
+label values Age Age
+
+// re-weight to represent Stripe
+gen strata_int=0 if Strata==2 & !missing(Progress)
+replace strata_int=1 if Strata==1 & !missing(Progress)
+replace strata_int=2 if Strata==0 & !missing(Progress)
+
+gen strata_wt=0.135 if strata_int==0
+replace strata_wt=1.48 if strata_int==1
+replace strata_wt=1.165 if strata_int==2
+
+keep Age strata_int strata_wt
+bysort Age (strata_int): gen stripe_firm_count_eq=sum(strata_wt)
+bysort Age (strata_int): replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+collapse stripe_firm_count_eq, by (Age)
+drop if Age==.
+
+** ratio of firms by age
+egen s_ratio=total(stripe_firm_count_eq)
+replace s_ratio= stripe_firm_count_eq/s_ratio
+
+// merge data
+merge 1:1 Age using `ase'
+replace Firms=-Firms
+
+graph hbar Firms s_ratio, bar(1, fcolor("94 85 81")) bar(2, fcolor("62 156 143")) over(Age, label(labsize(small))) bargap(-100) ///
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) title(Founder age, size(medsmall))
