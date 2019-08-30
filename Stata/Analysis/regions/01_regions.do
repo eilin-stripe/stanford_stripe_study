@@ -14,7 +14,7 @@ local raw_dir "01_raw_data"
 local clean_dir "sta_files"
 local output_dir "07_Output"
 
-/*/ read zip code data
+// read zip code data
 import delimited "`raw_dir'/06_zip_to_zcta_2018/ziptozcta2017-Table 1.csv", encoding(ISO-8859-1)clear
 
 * format to zip5
@@ -55,13 +55,14 @@ gen strata_int=0 if Strata==2 & !missing(Progress)
 replace strata_int=1 if Strata==1 & !missing(Progress)
 replace strata_int=2 if Strata==0 & !missing(Progress)
 
-gen strata_wt=0.126 if strata_int==0
-replace strata_wt=1.449 if strata_int==1
-replace strata_wt=1.253 if strata_int==2
+gen strata_wt=0.135 if strata_int==0
+replace strata_wt=1.48 if strata_int==1
+replace strata_wt=1.165 if strata_int==2
+
 
 // stripe-equivalent firms by region
-bysort region: gen stripe_firm_count_eq=sum(strata_wt)
-bysort region: replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+bysort region (strata_int): gen stripe_firm_count_eq=sum(strata_wt)
+bysort region (strata_int): replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
 
 // keep region and fraction of stripe-equivalent by region
 collapse stripe_firm_count_eq, by(region)
@@ -103,12 +104,11 @@ replace ratio = -ratio
 label define regionl 1 "Northeast" 2 "Midwest" 3 "South" 4 "West"
 label values region regionl
 
-graph hbar ratio s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(region, label(labsize(small))) ///
+graph hbar ratio s_ratio, bar(1, fcolor("94 85 81")) bar(2, fcolor("62 156 143"))  over(region, label(labsize(small))) ///
 	bargap(-100) ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms"))  title(Region, size(medsmall))
 
 	
-*/
-// are there more online firms in CA?
+/*/ are there more online firms in CA?
 
 // read zip code data
 import delimited "`raw_dir'/06_zip_to_zcta_2018/ziptozcta2017-Table 1.csv", encoding(ISO-8859-1)clear

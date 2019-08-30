@@ -125,16 +125,20 @@ graph bar Firms Firmssurvey, over(Age, label(angle(45))) ///
 */
 
 // read in combined r1 and r2 data
-use "/Users/eilin/Documents/SIE/sta_files/Combined.dta", clear
+use "/Users/eilin/Documents/SIE/01_raw_data/Combined.dta", clear
+
+* clean
+keep if Progress==100			// keep completed surveys
+rename Female female
 
 // re-weight to represent Stripe
 gen strata_int=0 if Strata==2 & !missing(Progress)
 replace strata_int=1 if Strata==1 & !missing(Progress)
 replace strata_int=2 if Strata==0 & !missing(Progress)
 
-gen strata_wt=0.126 if strata_int==0
-replace strata_wt=1.449 if strata_int==1
-replace strata_wt=1.253 if strata_int==2
+gen strata_wt=0.135 if strata_int==0
+replace strata_wt=1.48 if strata_int==1
+replace strata_wt=1.165 if strata_int==2
 
 gen edu_temp=1 if Education==1 | Education==2
 replace edu_temp=2 if Education==3 | Education==4
@@ -145,8 +149,8 @@ keep edu_temp strata_int strata_wt
 rename edu_temp Education
 
 
-bysort Education: gen stripe_firm_count_eq=sum(strata_wt)
-bysort Education: replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+bysort Education (strata_int): gen stripe_firm_count_eq=sum(strata_wt)
+bysort Education (strata_int): replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
 collapse stripe_firm_count_eq, by (Education)
 drop if Education==.
 label define edul 1 "High School" 2 "Some College" 3 "Bachelors" 4 "Masters+"
@@ -160,5 +164,58 @@ replace s_ratio= stripe_firm_count_eq/s_ratio
 merge 1:1 Education using `ase'
 replace Firms=-Firms
 
-graph hbar Firms s_ratio, bar(1, fcolor("144 56 140")) bar(2, fcolor("68 65 130")) over(Education, label(labsize(small))) bargap(-100) ///
-	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) title(Education, size(medsmall))
+graph hbar Firms s_ratio, bar(1, fcolor("94 85 81")) bar(2, fcolor("62 156 143"))over(Education, label(labsize(small))) bargap(-100) ///
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) ///
+	title(Education, size(medsmall))
+	
+	
+/*///////////////////////////////////////////////////////////////////////////////
+
+*** Extra: Comparing ASE to employer Stripe users
+
+////////////////////////////////////////////////////////////////////////////////
+
+// read in combined r1 and r2 data
+use "/Users/eilin/Documents/SIE/01_raw_data/Combined.dta", clear
+
+* clean
+keep if Progress==100			// keep completed surveys
+rename Female female
+keep if NumEmployees > 1		// keep employer firms
+
+// re-weight to represent Stripe
+gen strata_int=0 if Strata==2 & !missing(Progress)
+replace strata_int=1 if Strata==1 & !missing(Progress)
+replace strata_int=2 if Strata==0 & !missing(Progress)
+
+gen strata_wt=0.135 if strata_int==0
+replace strata_wt=1.48 if strata_int==1
+replace strata_wt=1.165 if strata_int==2
+
+gen edu_temp=1 if Education==1 | Education==2
+replace edu_temp=2 if Education==3 | Education==4
+replace edu_temp=3 if Education==5
+replace edu_temp=4 if Education==6
+
+keep edu_temp strata_int strata_wt
+rename edu_temp Education
+
+
+bysort Education (strata_int): gen stripe_firm_count_eq=sum(strata_wt)
+bysort Education (strata_int): replace stripe_firm_count_eq= stripe_firm_count_eq[_N]
+collapse stripe_firm_count_eq, by (Education)
+drop if Education==.
+label define edul 1 "High School" 2 "Some College" 3 "Bachelors" 4 "Masters+"
+label values Education edul
+
+** ratio of firms by edu
+egen s_ratio=total(stripe_firm_count_eq)
+replace s_ratio= stripe_firm_count_eq/s_ratio
+
+// merge data
+merge 1:1 Education using `ase'
+replace Firms=-Firms
+
+graph hbar Firms s_ratio, bar(1, fcolor("94 85 81")) bar(2, fcolor("62 156 143")) over(Education, label(labsize(small))) bargap(-100) ///
+	ylabel(-.4 (0.2) 0.4) graphregion(fcolor(white) ifcolor(white)) legend(label(1 "All US firms") label(2 "Stripe firms")) ///
+	title(Education, size(medsmall))
